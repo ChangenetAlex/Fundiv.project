@@ -76,7 +76,14 @@ MyDFs <- function(dir="bureau",
   )),
   file = paste0(Dir, "dfplot.sp.mortality.plot.rate.yr.txt")) # Output as a latex wrapped in a txt file
   
-  
+  ## Added on the 22th june Add the minimum and mean SPEI
+  Years <- c("spei01","spei03","spei06","spei12","spei18","spei24","spei36","spei48")
+  for (i in Years){
+    load(file = paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/climate/SPEI/plots_",i,"_1981_2015.RData"))
+    dfplot[,paste0("min_",i)] <- spei_plots_all$min_spei_survey_years[match(dfplot$plotcode, spei_plots_all$plotcode,incomparables = NA)]
+    dfplot[,paste0("mean_",i)] <- spei_plots_all$mean_spei_survey_years[match(dfplot$plotcode, spei_plots_all$plotcode,incomparables = NA)]
+  }
+         
   saveRDS(get("dfplot"), paste0(Dir, "/dfplot", CODE, seuil, ".rds")) # Work at the plot scale NO SCALE
   dfplot <-
     readRDS(paste0("dfplot", CODE, seuil, ".rds")) #Base de données plot full
