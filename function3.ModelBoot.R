@@ -20,7 +20,7 @@ library(plyr)
 library(parallel)
 library(ggplot2)
 library(pbapply)
-library(plotly)
+#library(plotly)
 library(reshape2)
 library(stringr)
 

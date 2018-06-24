@@ -22,7 +22,8 @@ library(spaMM)
 Dir <- c("/home/achangenet/Documents/FUNDIV - NFI - Europe/")
 setwd(Dir)
 source(paste0(Dir,"Myscripts/6.climateSpecies.R"))
-Allcode <- c("PICABI","PINPINA","FAGSYL","PINHAL","QUEROB","PINNIG","QUEPET","CASSAT","ABIALB","QUEPUB","QUEPYR","FRAEXC","PINPIN",
+Allcode <- c("PINSYL")
+#Allcode <- c("PICABI","PINPINA","FAGSYL","PINHAL","QUEROB","PINNIG","QUEPET","CASSAT","ABIALB","QUEPUB","QUEPYR","FRAEXC","PINPIN",
              "QUESUB","PINRAD","BETPEN","PINCAN","PINUNC","EUCGLO","QUEFAG","ALNGLU","POPTRE","ACEPSE","LARDEC","ROBPSE","POPNIG","PICSIT","QUERUB")
 for (code in Allcode){
   try(ExtractClimate(CODE=code,yearINI=yearI,yearFIN=yearF,Intervalle=Inter,files.wanted=files.w,save=T),silent=T) # Maybe not all the intervalle
@@ -32,8 +33,11 @@ for (code in Allcode){
 Dir <- c("/home/achangenet/Documents/FUNDIV - NFI - Europe/")
 setwd(Dir)
 source(paste0(Dir,"Myscripts/8.spatialisation.R"))
-Allcode <- c("FAGSYL","PINHAL","QUEROB","PINNIG","QUEPET","CASSAT","ABIALB","QUEPUB","QUEPYR","FRAEXC","PINPIN",
-             "QUESUB","BETPEN","ALNGLU","POPTRE","ACEPSE","LARDEC","POPNIG")
+Allcode <- c("PINSYL")
+#Allcode <- c("PINHAL","QUEROB","PINNIG","QUEPET","CASSAT","ABIALB","QUEPYR","FRAEXC","PINPIN",
+#             "QUESUB","BETPEN")
+#Allcode <- c("FAGSYL","PINHAL","QUEROB","PINNIG","QUEPET","CASSAT","ABIALB","QUEPUB","QUEPYR","FRAEXC","PINPIN",
+     #        "QUESUB","BETPEN","ALNGLU","POPTRE","ACEPSE","LARDEC","POPNIG")
 Errors.files <- file(paste0(Dir,"species/Errors.spatialisation.Rout"), open="wt")
 sink(file=Errors.files,append = T, type="message")
 for (code in Allcode){
@@ -43,55 +47,26 @@ sink(type="message")
 close(Errors.files)
 
 
-# Save the Jpeg that did not work 
-Dir <- c("/home/achangenet/Documents/FUNDIV - NFI - Europe/")
-setwd(Dir)
-source(paste0(Dir,"Myscripts/8.spatialisation.R"))
-Allcode <- c("PINHAL","QUEROB","PINNIG","QUEPET","CASSAT","ABIALB","QUEPYR","FRAEXC","PINPIN",
-             "QUESUB","BETPEN")
-for (code in Allcode){
-  i = 1
-  for (i in 1:length(eumedclim.vars)) {
-    assign(paste0(eumedclim.vars[i],"_T_Dist"),raster(list.files(paste0(Dir,"species/",code,""),pattern=paste0("^",eumedclim.vars[i],"_T_Dist.tif"), full.names=T)),envir = globalenv())
-    try(Plot.map(CODE = code,Climvar = eumedclim.vars[i], Maptype=type[1], top = T, Save = T, myPoints = F),silent=F) #re run the code with this arguments 
-  }
-}
-list.files(paste0(Dir,"species/",CODE,""),pattern=paste0(eumedclim.vars[1],"_T_Dist.tif"), full.names=T)
-
-
 # Cut marginality for all species and do it again for the species whose plots number is too low. 
 Dir <- c("/home/achangenet/Documents/FUNDIV - NFI - Europe/")
 setwd(Dir)
 source(paste0(Dir,"Myscripts/9.Marginality.R"))
-Allcode <- list("PICABI","PINPINA","QUEILE","POPTRE","LARDEC","POPNIG")
+Allcode <- c("PINSYL")
+#Allcode <- list("PICABI","PINPINA","QUEILE","POPTRE","LARDEC","POPNIG")
 Errors.files2 <- file(paste0(Dir,"species/Errors.Marginality.Rout"), open="wt")
 sink(Errors.files2, type="message")
 for (code in Allcode){
   try(Acp1000(CODE = code,nsample=10000,NF=2,seuil=0.8,seuilC=0.6,save=T),silent=T) #re run the code with this arguments # First function for PCA
 }
-Allcode <- c("PICABI","PINPINA","FAGSYL","PINHAL","QUEROB","QUEILE","PINNIG","QUEPET","CASSAT","ABIALB","QUEPUB","QUEPYR","FRAEXC","PINPIN",
-             "QUESUB","BETPEN","ALNGLU","POPTRE","ACEPSE","LARDEC","POPNIG")
+#Allcode <- c("PICABI","PINPINA","FAGSYL","PINHAL","QUEROB","QUEILE","PINNIG","QUEPET","CASSAT","ABIALB","QUEPUB","QUEPYR","FRAEXC","PINPIN",
+#             "QUESUB","BETPEN","ALNGLU","POPTRE","ACEPSE","LARDEC","POPNIG")
 for (code in Allcode){
   try(Marginality_Levels(CODE=code,seuil=0.8,seuilC=0.6,save=T),silent=T)
 }
 sink(type="message")
 close(Errors.files2)
-mclapply(Allcode, function(x){Acp1000(CODE=x,nsample=10000,NF=2,seuil=0.8,seuilC=0.6,save=T)},mc.cores = 6)
-mclapply(Allcode, function(x){Marginality_Levels(CODE = x,seuil=0.8,seuilC=0.6,save=T)},mc.cores = 4)
 
-Dir <- c("/home/achangenet/Documents/FUNDIV - NFI - Europe/")
-setwd(Dir)
-source(paste0(Dir,"Myscripts/Fundiv.project/10.Dfplots.R"))
-Allcode <- list("LARDEC")
-Errors.files <- file(paste0(Dir,"our-data/species/Errors.dfplots.Rout"), open="wt")
-sink(Errors.files, type="message")
-for (code in Allcode){
-  try(MyDFs(dir="bureau",CODE = code,seuil=0.8,seuilC=0.6),silent=T) #re run the code with this arguments # First function for PCA
-}
-sink(type="message")
-close(Errors.files)
-
-
+# Calcul des indexes SPEI for all intervalles 
 Dir <- c("/home/achangenet/Documents/FUNDIV - NFI - Europe/")
 setwd(Dir)
 source(paste0(Dir,"Myscripts/10bis.SPEI.R"))
@@ -100,6 +75,23 @@ for (years in Years){
   try(SPEI(nStart = nStart,nEnd = nEnd, ncname = years),silent=T)
 }
 
+### Dfplots databases 
+Dir <- c("/home/achangenet/Documents/FUNDIV - NFI - Europe/")
+setwd(Dir)
+source(paste0(Dir,"Myscripts/Fundiv.project/10.Dfplots.R"))
+#Allcode <- list("FAGSYL")
+Allcode <- c("PICABI","PINPINA","PINHAL","QUEROB","QUEILE","PINNIG","QUEPET","CASSAT","ABIALB","QUEPUB","QUEPYR","FRAEXC","PINPIN",
+             "QUESUB","BETPEN","ALNGLU","POPTRE","ACEPSE","LARDEC","POPNIG")
+Errors.files <- file(paste0(Dir,"our-data/species/Errors.dfplots.Rout"), open="wt")
+sink(Errors.files, type="message")
+for (code in Allcode){
+  try(MyDFs(dir="bureau",CODE = code,seuil=0.7,seuilC=0.6),silent=T) #re run the code with this arguments # First function for PCA
+}
+sink(type="message")
+close(Errors.files)
+
+
+
 
 
 Dir = c("/Users/alexandrechangenet/Dropbox/FUNDIV/") # Directory 
@@ -107,15 +99,15 @@ Dir <- c("/home/achangenet/Documents/FUNDIV - NFI - Europe/")
 
 setwd(Dir)
 # Load the function 
-source(paste0(Dir,"Myscripts/function1.R.squared.r"))
-source(paste0(Dir,"Myscripts/function2.Saving.R"))
-source(paste0(Dir,"Myscripts/function3.ModelBoot.R"))
-source(paste0(Dir,"Myscripts/function4.Diagnostic.R"))
-source(paste0(Dir,"Myscripts/function5.Premodel.R"))
+source(paste0(Dir,"Myscripts/Fundiv.project/function1.R.squared.r"))
+source(paste0(Dir,"Myscripts/Fundiv.project/function2.Saving.R"))
+source(paste0(Dir,"Myscripts/Fundiv.project/function3.ModelBoot.R"))
+source(paste0(Dir,"Myscripts/Fundiv.project/function4.Diagnostic.R"))
+source(paste0(Dir,"Myscripts/Fundiv.project/function5.Premodel.R"))
 
 #Extraction of the database of the wanted species : 
 
-CODE = "BETPEN" 
+CODE = "FAGSYL" 
 #"ALNGLU" 
 #"ABIALB"
 #"BETPEN"
@@ -124,6 +116,7 @@ CODE = "BETPEN"
 seuil = 0.80
 #Dir = c(paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models")) # Directory 
 Dir = paste0(Dir,"our-data/species/",CODE,"/CLIMAP") # Directory 
+Dir = paste0(Dir,"our-data/species/",CODE) # Directory 
 setwd(Dir)
 list.files(Dir,pattern = paste0(seuil,".rds"))
 dfplot <- readRDS(paste0("dfplot",CODE,seuil,".rds")) #Base de données plot
@@ -135,13 +128,21 @@ dir.create(path=paste0(Dir,"/Models/binomial"))
 Dir =c(paste0(Dir,"/Models"))
 setwd(Dir)
 
+Explain <- c(Explain,"min_spei24","mean_spei24")
+Explain <- Explain[c(1:5,7,8,6)]
+Resp <- c("sp.mort.bin")
 Premodel(z=dfplot2,Resp=Resp,Explain=Explain,size=4,save=T)
 Dir =c(paste0(Dir,"/binomial"))
 setwd(Dir)
-Mbin2BETPEN <- fitme(sp.mort.bin ~ treeNbr + BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + bio14_climate_mean.30 + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BA.ha.plot.1:bio1_climate_mean.30 + BAj.plot.1:bio1_climate_mean.30 + BA.ha.plot.1:bio14_climate_mean.30 + BAj.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:BAj.plot.1 + bio1_climate_mean.30:bio14_climate_mean.30 + BA.ha.plot.1:Plotcat + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + (1|country), data=dfplot2,family = binomial(),method='REML')
+dfplot2$logbio1 <- log(dfplot2$bio1_climate_mean.30 + 5)
+dfplot2$logbio14 <- log(dfplot2$bio14_climate_mean.30 + 5)
+
+Mbin1FAGSYL <- fitme(sp.mort.bin ~ treeNbr + yearsbetweensurveys + min_spei01 + mean_spei01 + min_spei06 + mean_spei06 + min_spei12 + mean_spei12 + min_spei24 + mean_spei24 + min_spei48 + mean_spei48 + BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + logbio1 + bio14_climate_mean.30 + logbio14 + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BA.ha.plot.1:bio1_climate_mean.30 + BA.ha.plot.1:logbio1 + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:logbio1 + BA.ha.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:logbio14 + BAj.plot.1:bio14_climate_mean.30 + BAj.plot.1:logbio14 + BA.ha.plot.1:BAj.plot.1 + bio1_climate_mean.30:bio14_climate_mean.30 + logbio1:logbio14 + BA.ha.plot.1:Plotcat + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + Plotcat:logbio1 + Plotcat:logbio14 + (1|country), data=dfplot2,family = binomial(),method='REML')
+Mbin1FAGSYL <- fitme(sp.mort.bin ~ treeNbr + yearsbetweensurveys + min_spei01 + mean_spei01 + min_spei06 + mean_spei06 + min_spei12 + mean_spei12 + min_spei24 + mean_spei24 + min_spei48 + mean_spei48 + BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + log(bio1_climate_mean.30+5) + bio14_climate_mean.30 + log(bio14_climate_mean.30+5) + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BA.ha.plot.1:bio1_climate_mean.30 + BA.ha.plot.1:log(bio1_climate_mean.30+5) + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:log(bio1_climate_mean.30+5) + BA.ha.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:log(bio14_climate_mean.30+5) + BAj.plot.1:bio14_climate_mean.30 + BAj.plot.1:log(bio14_climate_mean.30+5) + BA.ha.plot.1:BAj.plot.1 + bio1_climate_mean.30:bio14_climate_mean.30 + log(bio1_climate_mean.30+5):log(bio14_climate_mean.30+5) + BA.ha.plot.1:Plotcat + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + Plotcat:log(bio1_climate_mean.30+5) + Plotcat:log(bio14_climate_mean.30+5) + (1|country), data=dfplot2,family = binomial(),method='REML')
+Mbin1FAGSYL <- fitme(sp.mort.bin ~ treeNbr + yearsbetweensurveys + min_spei01 + mean_spei01 + min_spei06 + mean_spei06 + min_spei12 + mean_spei12 + min_spei24 + mean_spei24 + min_spei48 + mean_spei48 + BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + bio14_climate_mean.30 + log(dfplot2$bio14_climate_mean.30+5) + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BA.ha.plot.1:bio1_climate_mean.30 + BA.ha.plot.1:log(bio1_climate_mean.30+1) + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:log(bio1_climate_mean.30+1) + BA.ha.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:log(bio14_climate_mean.30+1) + BAj.plot.1:bio14_climate_mean.30 + BAj.plot.1:log(bio14_climate_mean.30+1) + BA.ha.plot.1:BAj.plot.1 + bio1_climate_mean.30:bio14_climate_mean.30 + log(bio1_climate_mean.30+1):log(bio14_climate_mean.30+1) + BA.ha.plot.1:Plotcat + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + Plotcat:log(bio1_climate_mean.30+1) + Plotcat:log(bio14_climate_mean.30+1) + (1|country), data=dfplot2,family = binomial(),method='REML')
 Mbin80EtestOffsetPINSYL <- fitme(sp.mort.bin ~ BAIj.plot.bis + treeNbr +  offset(log(yearsbetweensurveys)) + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + bio14_climate_mean.30 + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:BAj.plot.1 + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + (1|country), data=dfplot2, family = binomial(link = "cloglog"),method='REML')
-Saving(Mbin2BETPEN)
-Extraction(Mbin2BETPEN)
+Saving(Mbin1FAGSYL)
+Extraction(Mbin1FAGSYL)
 ModelBoot(Mbin80EtestOffsetPINSYL,5,7,LvL=50,CAT=CAT,nBoot=50,Yportion = 0.80,saveboot=T,nCoeur=10)
 Diagnostic(Mbin80EtestOffsetPINSYL,0.66,F)
 
