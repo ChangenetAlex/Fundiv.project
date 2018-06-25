@@ -2,7 +2,7 @@
 # Script to calcultae the lmortality as a rate, record various summary and database 
 
 SavingInfo = "MyDFs(dir='bureau' or 'home',
-CODE = 'PINSYL',
+CODE = 'BETPEN',
 seuil = 0.8
 seuilC = 0.6)"
 bannerBreak = "\n*********************************************************************\n"
@@ -23,7 +23,6 @@ MyDFs <- function(dir="bureau",
   list.files(Dir, pattern = paste0(".rds"))
   df <-
     readRDS(paste0("Mydf_", CODE, "_", seuil, "_", seuilC, ".rds")) #Base de données plot full
-  colnames(df)
   ###################################################################
   ###                                                             ###
   ###   Here is the df (scaled plots but some are managed)        ###

@@ -66,7 +66,7 @@ Premodel <- function(z,Resp,Explain,size,save=F){
   c1 <- rep(z[,c(Resp)],times=length(Explain))
   c2 <- gather(z[,c(Explain)])
   test <- cbind(c1,c2[,c(2,1)])
-  if (save==T) jpeg(file=paste0(Dir,"/Premodel/Scatterplots.jpeg"),width=710)
+  if (save==T) jpeg(file=paste0(Dir,"/Premodel/",Resp,"_Scatterplots.jpeg"),width=710)
   par(mfrow=c(1,1))
   xyplot(test[,1]~test[,2] | test[,3],col=1,
          strip=function(bg="white", ...)
@@ -81,7 +81,7 @@ Premodel <- function(z,Resp,Explain,size,save=F){
            panel.points(x,y,col=1)
            panel.loess(x,y,xol=1,lwd=2)})
   dev.off()
-  if (save==T) jpeg(file=paste0(Dir,"/Premodel/ClevelandPlot.jpeg"),width=710) # Save it 
+  if (save==T) jpeg(file=paste0(Dir,"/Premodel/",Resp,"_ClevelandPlot.jpeg"),width=710) # Save it 
   par(mfrow=c(size,size))
   for (i in 1:length(A)){
     dotchart(z[,c(A[i])],
@@ -92,7 +92,7 @@ Premodel <- function(z,Resp,Explain,size,save=F){
     pch = c(1:3))
   }
   dev.off()
-  if (save==T) jpeg(file=paste0(Dir,"/Premodel/PairsPlot.jpeg"),width=710) # Save it 
+  if (save==T) jpeg(file=paste0(Dir,"/Premodel/",Resp,"_PairsPlot.jpeg"),width=710) # Save it 
   par(mfrow=c(1,1))
   pairs(z[,c(A)],panel = panel.smooth,upper.panel=panel.cor,diag.panel = panel.hist)
   dev.off()
@@ -101,7 +101,7 @@ Premodel <- function(z,Resp,Explain,size,save=F){
   VIF
   VIFSTEP
   if (save==T){
-          capture.output(print(VIF),file=paste0(Dir,"/Premodel/Vif.txt")) # Output as a latex wrapped in a txt file
-          capture.output(print(VIFSTEP),file=paste0(Dir,"/Premodel/Vifstep.txt")) # Output as a latex wrapped in a txt file
+          capture.output(print(VIF),file=paste0(Dir,"/Premodel/",Resp,"_Vif.txt")) # Output as a latex wrapped in a txt file
+          capture.output(print(VIFSTEP),file=paste0(Dir,"/Premodel/",Resp,"_Vifstep.txt")) # Output as a latex wrapped in a txt file
   }
 }
