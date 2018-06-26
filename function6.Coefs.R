@@ -1,16 +1,15 @@
 Mbin1FAGSYLspaMM <- fitme(sp.mort.bin ~ 0 + treeNbr + yearsbetweensurveys + min_spei01 + mean_spei01 + min_spei06 + mean_spei06 + min_spei12 + mean_spei12 + min_spei24 + mean_spei24 + min_spei48 + mean_spei48 + BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + logbio1 + bio14_climate_mean.30 + logbio14 + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BA.ha.plot.1:bio1_climate_mean.30 + BA.ha.plot.1:logbio1 + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:logbio1 + BA.ha.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:logbio14 + BAj.plot.1:bio14_climate_mean.30 + BAj.plot.1:logbio14 + BA.ha.plot.1:BAj.plot.1 + bio1_climate_mean.30:bio14_climate_mean.30 + logbio1:logbio14 + BA.ha.plot.1:Plotcat + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + Plotcat:logbio1 + Plotcat:logbio14 + (1|country), data=dfplot2,family = binomial(),method='REML')
 Mbin1FAGSYLspaMM <- fitme(sp.mort.bin ~ treeNbr + yearsbetweensurveys + min_spei01 + mean_spei01 + min_spei06 + mean_spei06 + min_spei12 + mean_spei12 + min_spei24 + mean_spei24 + min_spei48 + mean_spei48 + BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + logbio1_climate_mean.30 + bio14_climate_mean.30 + logbio14_climate_mean.30 + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BA.ha.plot.1:bio1_climate_mean.30 + BA.ha.plot.1:logbio1_climate_mean.30 + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:logbio1_climate_mean.30 + BA.ha.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:logbio14_climate_mean.30 + BAj.plot.1:bio14_climate_mean.30 + BAj.plot.1:logbio14_climate_mean.30 + BA.ha.plot.1:BAj.plot.1 + bio1_climate_mean.30:bio14_climate_mean.30 + logbio1_climate_mean.30:logbio14_climate_mean.30 + BA.ha.plot.1:Plotcat + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + Plotcat:logbio1_climate_mean.30 + Plotcat:logbio14_climate_mean.30 + (1|country), data=dfplot2,family = binomial(),method='REML')
+Saving(Mbin1FAGSYLspaMM)
 
 
 # Dans mon modèle, les paramètres d'interactions doivent être après les para log, seuls et cubique
 # Les noms des variables scaled doivent être les même que les non scales et pas une abbréviation
 
-# get the parameter values from the glm model
+# get the parameter values from the glm model Unique parameters of the model
+library(reshape2)
 
-##### CALCULATE CLIMATIC AND COMPETITION EFFECT - From individual data ##############
 
-# Store the individual-level data used in the model (standardised values are used in the model, 
-# so standardised values are used when calculating the effect sizes)
 ExtracTest <- function(x){
         A <- paste0(getCall(x)[2])
         A <- unlist(strsplit(A, "~",fixed = T))[2]
@@ -30,13 +29,15 @@ ExtracTest <- function(x){
         A <- unique(A)
         A
 }
-ExtracTest(Mbin1FAGSYLspaMM) # Me donne la liste des paramètres de mon modèles. 
-x <- Mbin1FAGSYLspaMM
 Effect_coef <- function(x,y){
-        s <- summary(x)
-        if(length(list.files(path=Dir,pattern=paste0("clim_effect_",deparse(substitute(Mbin1FAGSYLspaMM)),".RData")))==0){
+  if (grepl(deparse(substitute(x)),pattern="bin",fixed=T)==T){
+    Dir <- paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/FAGSYL/CLIMAP/Models/binomial/",deparse(substitute(x)),"/")
+  }else Dir <- paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/FAGSYL/CLIMAP/Models/Negbin/",deparse(substitute(x)),"/")
+  setwd(Dir)      
+  s <- summary(x)
+        if(length(list.files(path=Dir,pattern=paste0("clim_effect_",deparse(substitute(x)),".RData")))==0){
                 clim.effect <- dfplot2[,c(A,"latitude")]
-        }else {clim.effect <- get(load(paste0("clim_effect_",deparse(substitute(Mbin1FAGSYLspaMM)),".RData")))}
+        }else {clim.effect <- get(load(paste0("clim_effect_",deparse(substitute(x)),".RData")))}
         # For any parameters 
         B <- rownames(s$beta_table)
         B <- grep(B,pattern = y,fixed=T,value=T,invert=F)
@@ -57,13 +58,14 @@ Effect_coef <- function(x,y){
         print(clim.effect[1:10,]) # Check if I have all the columns I want 
         }
      
-ExtracTest(Mbin1FAGSYLspaMM) #Liste des para 
-Effect_coef(Mbin1FAGSYLspaMM,"BAj.plot.1")     # Para que l'on veut regarder   
+ExtracTest(Mbin1FAGSYLspaMM) # Me donne la liste des paramètres de mon modèles. 
+for (i in c("BAIj.plot.bis","BA.ha.plot.1","BAj.plot.1","treeNbr","bio1_climate_mean.30","bio14_climate_mean.30")){
+  Effect_coef(Mbin1FAGSYLspaMM,i)}     # Para que l'on veut regarder   
 
 
-# Function to obtain what we want (the database) 
 
-library(reshape2)
+### 3eme function to write 
+
 ### Load my Df ###
 clim.effect <- get(load(paste0("clim_effect_",deparse(substitute(Mbin1FAGSYLspaMM)),".RData")))
 EffectCol <- grep(colnames(clim.effect),pattern = "effect",fixed=T,value=T,invert=F) # Extract the column for which the coef were extracted
@@ -112,9 +114,9 @@ for (i in 1:length(EffectCum)){
 }
 
 
-save(ind.clim.bio.rel.imp, file="./ind_abs_imp_all_variables.RData") # to modify 
+save(ind.clim.bio.abs.imp, file="./ind_abs_imp_all_variables.RData") # to modify 
 save(ind.clim.bio.rel.imp, file="./ind_rel_imp_all_variables.RData") # to modify
-load("./ind_rel_imp_all_variables.RData")
+#load("./ind_rel_imp_all_variables.RData")
 
 
 ind.clim.bio.rel.imp$latitude_c <- cut(ind.clim.bio.rel.imp$latitude, seq(floor(min(ind.clim.bio.rel.imp$latitude)),ceiling(max(ind.clim.bio.rel.imp$latitude)),0.5))
@@ -170,10 +172,10 @@ clim.bio.abs$upr <- clim.bio.abs$mean+(1.96*clim.bio.abs$se)
 clim.bio.abs$lwr <- ifelse(clim.bio.abs$lwr<0,0,clim.bio.abs$lwr)
 clim.bio.abs$upr <- ifelse(clim.bio.abs$upr>1,1,clim.bio.abs$upr)
 
-save(clim.bio.rel, file=paste0("clim_bio_rel",deparse(substitute(x)),".RData"))
-save(clim.bio.abs, file=paste0("clim_bio_abs",deparse(substitute(x)),".RData"))
+save(clim.bio.rel, file=paste0("clim_bio_rel_",deparse(substitute(x)),".RData"))
+save(clim.bio.abs, file=paste0("clim_bio_abs_",deparse(substitute(x)),".RData"))
 
 
 
 
-### ggplot part 
+### ggplot part = 4eme function  

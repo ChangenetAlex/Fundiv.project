@@ -115,7 +115,7 @@ CODE = "FAGSYL"
 #"PINPINA"
 seuil = 0.80
 #Dir = c(paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models")) # Directory 
-Dir = paste0(Dir,"our-data/species/",CODE,"/CLIMAP") # Directory 
+Dir = (paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP")) # Directory 
 setwd(Dir)
 list.files(Dir,pattern = paste0(seuil,".rds"))
 dfplot <- readRDS(paste0("dfplot",CODE,seuil,".rds")) #Base de données plot
@@ -124,14 +124,14 @@ dfplot2 <- readRDS(paste0("dfplot2",CODE,seuil,".rds")) #Base de données plot
 dir.create(path=paste0(Dir,"/Models"))
 dir.create(path=paste0(Dir,"/Models/Negbin"))
 dir.create(path=paste0(Dir,"/Models/binomial"))
-Dir =c(paste0(Dir,"/Models"))
+Dir =c(paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models"))
 setwd(Dir)
 
 Explain <- c(Explain,"min_spei24","mean_spei24")
 Explain <- Explain[c(1:5,7,8,6)]
 Resp <- c("sp.mort.bin")
 Premodel(z=dfplot2,Resp=Resp,Explain=Explain,size=4,save=T)
-Dir =c(paste0(Dir,"/binomial"))
+Dir =c(paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models/binomial"))
 setwd(Dir)
 dfplot2$logbio1_climate_mean.30 <- log(dfplot2$bio1_climate_mean.30 + 5)
 dfplot2$logbio14_climate_mean.30 <- log(dfplot2$bio14_climate_mean.30 + 5)
@@ -149,7 +149,7 @@ model <- Mbin1BETPEN
 link <- model$family$link
 family. <- model$family$family[1]
 
-Dir =c(paste0(Dir,"/Negbin"))
+Dir =c(paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models/Negbin"))
 setwd(Dir)
 MnbZT1BETPEN <- fitme(sp.mortality.plot.count.yr ~ treeNbr + BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + tmean.djf_climate_mean.30 + ppet.mean_climate_mean.30 + Plotcat + I(tmean.djf_climate_mean.30^2) + I(ppet.mean_climate_mean.30^2) + BA.ha.plot.1:tmean.djf_climate_mean.30 + BAj.plot.1:tmean.djf_climate_mean.30 + BA.ha.plot.1:ppet.mean_climate_mean.30 + BAj.plot.1:ppet.mean_climate_mean.30 + BA.ha.plot.1:BAj.plot.1 + tmean.djf_climate_mean.30:ppet.mean_climate_mean.30 + BA.ha.plot.1:Plotcat + BAj.plot.1:Plotcat + Plotcat:tmean.djf_climate_mean.30 + Plotcat:ppet.mean_climate_mean.30 + (1|country), data=subset(dfplot2,sp.mortality.plot.count.yr>0),family=negbin(),method='REML')
 MnbZT.Ibis.PINSYL <- fitme(sp.mortality.plot.count.yr ~ BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + tmean.djf_climate_mean.30 + ppet.mean_climate_mean.30 + Plotcat + I(ppet.mean_climate_mean.30^2) + BAj.plot.1:tmean.djf_climate_mean.30 + BA.ha.plot.1:BAj.plot.1 + BA.ha.plot.1:Plotcat + BAj.plot.1:Plotcat + (1|country), data=subset(dfplot2,sp.mortality.plot.count.yr>0),family=negbin(),method='REML')
@@ -162,7 +162,8 @@ Diagnostic(MnbZT.Ibis.PINSYL,0.66,F)
 
 
 list.dirs(getwd())
-setwd(list.dirs(getwd())[27]) # Chose the model file
+setwd(list.dirs(getwd())[2]) # Chose the model file
+list.files()
 Mbin80EtestOffset <- get(load(file = "Mbin80EtestOffset.rda")) 
 rm("x")
 Diagnostic(Mbin80EtestOffset,0.66,T)
