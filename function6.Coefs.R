@@ -57,125 +57,170 @@ Effect_coef <- function(x,y){
         save(clim.effect, file=paste0("clim_effect_",deparse(substitute(x)),".RData"))
         print(clim.effect[1:10,]) # Check if I have all the columns I want 
         }
-     
+Effect_summary <- function(x,BioticPara){
+  if (grepl(deparse(substitute(x)),pattern="bin",fixed=T)==T){
+    Dir <- paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/FAGSYL/CLIMAP/Models/binomial/",deparse(substitute(x)),"/")
+  }else Dir <- paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/FAGSYL/CLIMAP/Models/Negbin/",deparse(substitute(x)),"/")
+  setwd(Dir)      
+  clim.effect <- get(load(paste0("clim_effect_",deparse(substitute(x)),".RData"))) ## Load my effects coefficients database (product from the second function)
+  
+  ############################################
+  #### All effects that we will summarize ####
+  ############################################
+  
+  EffectCol <- grep(colnames(clim.effect),pattern = "effect",fixed=T,value=T,invert=F) # Simple effect columns for which coef were extracted
+  EffectCum <- c("climate","biotic","competition") # Add three combined categories
+  if (BioticPara == "competition") EffectCum <- EffectCum[c(1,3)] else EffectCum <- EffectCum[1:2]
+  EffectAll <- c(EffectCol,EffectCum) ## Simple + Categories 
+  # Newdataframes made of these extracted effect and the latitudes 
+  ind.clim.bio.abs.imp <- as.data.frame(clim.effect[,c("latitude")]) ## One with absolute values
+  names(ind.clim.bio.abs.imp) <- c("latitude")
+  ind.clim.bio.rel.imp <- as.data.frame(clim.effect[,c("latitude")]) ## The other with relative values
+  names(ind.clim.bio.rel.imp) <- c("latitude")
+  
+  # Create as many columns as the number of simple effects calculted for both df, and fil it with NA
+  for (i in 1:length(EffectCol)){
+    ind.clim.bio.rel.imp[,EffectCol[i]] <- NA
+    ind.clim.bio.abs.imp[,EffectCol[i]] <- NA
+  }
+  
+  for (i in 1:length(EffectCum)){
+    ind.clim.bio.rel.imp[,EffectCum[i]] <- NA
+    ind.clim.bio.abs.imp[,EffectCum[i]] <- NA
+  }
+  
+  #############################################################################################################################
+  ######                                                                                                           ############
+  ###### In the next section we define the paramters to include in the summary of biotic, competition and climatic ############
+  ######                  To change them, we need to modify directly the 'paste0("...")' terms                     ############
+  ######                                                                                                           ############
+  #############################################################################################################################
+  #
+  Var <- grep(colnames(clim.effect),pattern = "effect",fixed=T,value=T,invert=F) # Effect terms, no log nor quadratique effect# 
+  ############                                                                                                                #
+  ## Biotic ##      ##  'BA' terms and the number of trees (if an effect was calculated for them)n + BAI                      #
+  ############                                                                                                                #
+  if (BioticPara != "competition") {Var.biotic <- grep(Var,pattern = paste(c("BA","tree"),collapse="|"),value=T,invert=F)     #                                    #
+  #################                                                                                                           #
+  ## Competition ##    # Same as Biotic But the BAI is removed since it is a growth param                                     #
+  #################                                                                                                           #
+  } else {Var.comp <- grep(Var,pattern = paste(c("BA","tree"),collapse="|"),value=T,invert=F)                                 #
+  Var.comp <- grep(Var.biotic,pattern = "BAI",fixed=T,value=T,invert=T)}                                                      #
+  ################                                                                                                            #
+  ##  Climatic  ##     ## Variable de climat (spei + worlclim)                                                                #
+  ################                                                                                                            #
+  Var.climate <- grep(Var,pattern = paste(c("spei","climate"),collapse="|"),value=T,invert=F)                                 #
+  #
+  #############################################################################################################################
+  ######                                                                                                           ############
+  ######                                  This is the end of this section                                          ############
+  ######                                                                                                           ############
+  #############################################################################################################################
+  
+  
+  # For each latitude, the sum of the effects corresponding to the three defined categories is calculated as a new effect column 
+  if (BioticPara == "competition"){
+    if (length(Var.comp)>1){clim.effect$competition <- apply(abs(clim.effect[,Var.comp]), 1, function(x) sum(x)/length(Var.comp)) #need length superior to 1
+    }else clim.effect$competition <- abs(clim.effect[,Var.comp])
+    if (length(Var.climate)>1){clim.effect$climate <- apply(abs(clim.effect[,Var.climate]), 1, function(x) sum(x)/length(Var.climate)) #need length superior to 1
+    }else clim.effect$climate <- abs(clim.effect[,Var.climate])
+  }else{
+    if (length(Var.biotic)>1){clim.effect$biotic <- apply(abs(clim.effect[,Var.biotic]), 1, function(x) sum(x)/length(Var.biotic)) #need length superior to 1
+    }else clim.effect$biotic <- abs(clim.effect[,Var.biotic])
+    if (length(Var.climate)>1){clim.effect$climate <- apply(abs(clim.effect[,Var.climate]), 1, function(x) sum(x)/length(Var.climate)) #need length superior to 1
+    }else clim.effect$climate <- abs(clim.effect[,Var.climate])}
+  
+  ## Exatrct abs and relative effects for single or categories
+  clim.effect$max <- apply(cbind(abs(clim.effect[,EffectCol])), 1, max) # Extract Maximum among the simple effects
+  clim.effect$sum <- apply(cbind(abs(clim.effect[,EffectCol])), 1, sum) # Sum of the simple effects
+  clim.effect$maxcum <- apply(cbind(abs(clim.effect[,EffectCum])), 1, max) # Max between Competition and climate
+  clim.effect$sumcum <- apply(cbind(abs(clim.effect[,EffectCum])), 1, sum) # Sum of competition and climate 
+  
+  for (i in 1:length(EffectCol)){
+    ind.clim.bio.abs.imp[,EffectCol[i]] <- abs(clim.effect[,EffectCol[i]])/clim.effect$max  # Importance compare to the max one tha was extracted
+    ind.clim.bio.rel.imp[,EffectCol[i]] <- abs(clim.effect[,EffectCol[i]])/clim.effect$sum  # Relative importance compare to the others (sum is qual to one)
+  }
+  for (i in 1:length(EffectCum)){
+    ind.clim.bio.abs.imp[,EffectCum[i]] <- abs(clim.effect[,EffectCum[i]])/clim.effect$maxcum  # Importance compare to the max one
+    ind.clim.bio.rel.imp[,EffectCum[i]] <- abs(clim.effect[,EffectCum[i]])/clim.effect$sumcum  # Relative importance compare to the others (sum is qual to one)
+  }
+  ## Save these two files 
+  save(ind.clim.bio.abs.imp, file="./ind_abs_imp_all_variables.RData") # Save these two files
+  save(ind.clim.bio.rel.imp, file="./ind_rel_imp_all_variables.RData")
+  
+  ### Create a synthetic information with cut latitudes
+  
+  ## Cut latitude in categories (min and max of my data) by sequences of 0.5°
+  ind.clim.bio.rel.imp$latitude_c <- cut(ind.clim.bio.rel.imp$latitude, seq(floor(min(ind.clim.bio.rel.imp$latitude)),ceiling(max(ind.clim.bio.rel.imp$latitude)),0.5))
+  ind.clim.bio.abs.imp$latitude_c <- cut(ind.clim.bio.abs.imp$latitude, seq(floor(min(ind.clim.bio.abs.imp$latitude)),ceiling(max(ind.clim.bio.abs.imp$latitude)),0.5))
+  
+  ## For simple and categories effects : calculate max, number, mean and standard deviation BY GROUP OF LATITUDE
+  t.mean.rel <- ddply(ind.clim.bio.rel.imp, .(latitude_c), colwise(mean,c(EffectAll)), .drop=F,na.rm=T) #ok 
+  #t.max.rel <- ddply(ind.clim.bio.rel.imp, .(latitude_c), colwise(max,na.rm=T,c(EffectAll)),.drop=F,na.rm=T,.inform = T) # Pbm with NA
+  t.sd.rel <- ddply(ind.clim.bio.rel.imp, .(latitude_c), colwise(sd,c(EffectAll)), .drop=F,na.rm=T) #ok
+  t.n.rel <- ddply(ind.clim.bio.rel.imp, .(latitude_c), colwise(length,c(EffectAll)), .drop=F) #ok
+  
+  t.mean.abs <- ddply(ind.clim.bio.abs.imp, .(latitude_c), colwise(mean,c(EffectAll)), .drop=F,na.rm=T) #ok 
+  #t.max.abs <- ddply(ind.clim.bio.abs.imp, .(latitude_c), colwise(max,na.rm=T,c(EffectAll)),.drop=F,na.rm=T,.inform = T) # Pbm with NA
+  t.sd.abs <- ddply(ind.clim.bio.abs.imp, .(latitude_c), colwise(sd,c(EffectAll)), .drop=F,na.rm=T) #ok
+  t.n.abs <- ddply(ind.clim.bio.abs.imp, .(latitude_c), colwise(length,c(EffectAll)), .drop=F) #ok
+  
+  ## Calculation of the standard error from sd and number, by categories of latitude
+  for (i in 1:length(EffectAll)){
+    t.sd.rel[,paste0(EffectAll[i],"_se")] <- t.sd.rel[,EffectAll[i]]/sqrt(t.n.rel[,EffectAll[i]]) # Calcul of standard errors 
+    t.sd.abs[,paste0(EffectAll[i],"_se")] <- t.sd.abs[,EffectAll[i]]/sqrt(t.n.abs[,EffectAll[i]]) # Calcul of standard errors 
+  }
+  
+  ## label of latitude (0.5 superior degree)
+  lats <- seq(floor(min(ind.clim.bio.rel.imp$latitude)),ceiling(max(ind.clim.bio.rel.imp$latitude)),0.5)[-1] # Remove the first 
+  t.mean.rel$latitude <- lats
+  t.sd.rel$latitude <- lats
+  t.mean.abs$latitude <- lats
+  t.sd.abs$latitude <- lats
+  
+  ## shape my mean data for ggplots (abs and relative)
+  ind.rel.imp.clim.bio.long <- melt(t.mean.rel, id = "latitude", measure = c(EffectAll))
+  names(ind.rel.imp.clim.bio.long) <- c("latitude", "variable", "mean")
+  ind.abs.imp.clim.bio.long <- melt(t.mean.abs, id = "latitude", measure = c(EffectAll))
+  names(ind.abs.imp.clim.bio.long) <- c("latitude", "variable", "mean")
+  ## error bands for ggplots (se)
+  t.se.rel <- t.sd.rel[,(ncol(t.sd.rel)-length(EffectAll)):ncol(t.sd.rel)]
+  colnames(t.se.rel) <- sub("_se","", colnames(t.se.rel), ignore.case = FALSE,fixed = T) # remove the SE in the name to match all the variable
+  ind.rel.imp.clim.bio.long.se <- melt(t.se.rel, id = "latitude", measure = c(EffectAll))
+  names(ind.rel.imp.clim.bio.long.se) <- c("latitude", "variable", "se")
+  t.se.abs <- t.sd.abs[,(ncol(t.sd.abs)-length(EffectAll)):ncol(t.sd.abs)] #same thing for relative 
+  colnames(t.se.abs) <- sub("_se","", colnames(t.se.abs), ignore.case = FALSE,fixed = T)
+  ind.abs.imp.clim.bio.long.se <- melt(t.se.abs, id = "latitude", measure = c(EffectAll))
+  names(ind.abs.imp.clim.bio.long.se) <- c("latitude", "variable", "se")
+  
+  # Merge the mean and the se dataframes
+  clim.bio.rel <- merge(ind.rel.imp.clim.bio.long, ind.rel.imp.clim.bio.long.se, by=c("latitude", "variable"))
+  clim.bio.rel$lwr <- clim.bio.rel$mean-(1.96*clim.bio.rel$se) # lower intervalle
+  clim.bio.rel$upr <- clim.bio.rel$mean+(1.96*clim.bio.rel$se) # higher intervalle 
+  clim.bio.rel$lwr <- ifelse(clim.bio.rel$lwr<0,0,clim.bio.rel$lwr) 
+  clim.bio.rel$upr <- ifelse(clim.bio.rel$upr>1,1,clim.bio.rel$upr)
+  
+  clim.bio.abs <- merge(ind.abs.imp.clim.bio.long, ind.abs.imp.clim.bio.long.se, by=c("latitude", "variable"))
+  clim.bio.abs$lwr <- clim.bio.abs$mean-(1.96*clim.bio.abs$se)
+  clim.bio.abs$upr <- clim.bio.abs$mean+(1.96*clim.bio.abs$se) 
+  clim.bio.abs$lwr <- ifelse(clim.bio.abs$lwr<0,0,clim.bio.abs$lwr)
+  clim.bio.abs$upr <- ifelse(clim.bio.abs$upr>1,1,clim.bio.abs$upr)
+  
+  ## Save it all 
+  save(clim.bio.rel, file=paste0("clim_bio_rel_",deparse(substitute(x)),".RData"))
+  save(clim.bio.abs, file=paste0("clim_bio_abs_",deparse(substitute(x)),".RData"))
+}
+
+
 ExtracTest(Mbin1FAGSYLspaMM) # Me donne la liste des paramètres de mon modèles. 
 for (i in c("BAIj.plot.bis","BA.ha.plot.1","BAj.plot.1","treeNbr","bio1_climate_mean.30","bio14_climate_mean.30")){
   Effect_coef(Mbin1FAGSYLspaMM,i)}     # Para que l'on veut regarder   
+Effect_summary(Mbin1FAGSYLspaMM,"competition")
 
 
-
-### 3eme function to write 
-
-### Load my Df ###
-clim.effect <- get(load(paste0("clim_effect_",deparse(substitute(Mbin1FAGSYLspaMM)),".RData")))
-EffectCol <- grep(colnames(clim.effect),pattern = "effect",fixed=T,value=T,invert=F) # Extract the column for which the coef were extracted
-EffectCum <- c("climate","biotic","competition") # Add the three categories 
-EffectAll <- c(EffectCol,EffectCum)
-# Newdataframe made of these extracted effect and the latitude
-ind.clim.bio.abs.imp <- as.data.frame(clim.effect[,c("latitude")])
-names(ind.clim.bio.abs.imp) <- c("latitude")
-
-ind.clim.bio.rel.imp <- as.data.frame(clim.effect[,c("latitude")])
-names(ind.clim.bio.rel.imp) <- c("latitude")
-
-# As many varaibles as the number of runs of the previous function and fill it with NA
-for (i in 1:length(EffectCol)){
-ind.clim.bio.rel.imp[,EffectCol[i]] <- NA
-ind.clim.bio.abs.imp[,EffectCol[i]] <- NA
-}
-# Extract the max OR the sum for each latitude
-Var <- grep(colnames(clim.effect),pattern = "effect",fixed=T,value=T,invert=F) # Plus de log et termes au carré
-Var.comp <- grep(Var,pattern = paste(c("BA","tree"),collapse="|"),value=T,invert=F)
-Var.comp <- grep(Var.comp,pattern = "BAI",fixed=T,value=T,invert=T) # Variable de compétition tree numbers as well
-Var.climate <- grep(Var,pattern = paste(c("spei","climate"),collapse="|"),value=T,invert=F) # Variable de climat (spei + worlclim)
-Var.biotic <- grep(Var,pattern = paste(c("BA","tree"),collapse="|"),value=T,invert=F) # Variable compétition + BAI
-
-if (length(Var.comp)>1){clim.effect$competition <- apply(abs(clim.effect[,Var.comp]), 1, function(x) sum(x)/length(Var.comp)) #need length superior to 1
-}else clim.effect$competition <- abs(clim.effect[,Var.comp])
-
-if (length(Var.climate)>1){clim.effect$climate <- apply(abs(clim.effect[,Var.climate]), 1, function(x) sum(x)/length(Var.climate)) #need length superior to 1
-}else clim.effect$climate <- abs(clim.effect[,Var.climate])
-
-if (length(Var.biotic)>1){clim.effect$biotic <- apply(abs(clim.effect[,Var.biotic]), 1, function(x) sum(x)/length(Var.biotic)) #need length superior to 1
-}else clim.effect$biotic <- abs(clim.effect[,Var.biotic])
-
-clim.effect$max <- apply(cbind(abs(clim.effect[,EffectCol])), 1, max) # Max 
-clim.effect$sum <- apply(cbind(abs(clim.effect[,EffectCol])), 1, sum) # Sum 
-clim.effect$maxcum <- apply(cbind(abs(clim.effect[,EffectCum])), 1, max) # Max 
-clim.effect$sumcum <- apply(cbind(abs(clim.effect[,EffectCum])), 1, sum) # Sum 
-
-for (i in 1:length(EffectCol)){
-  ind.clim.bio.abs.imp[,EffectCol[i]] <- abs(clim.effect[,EffectCol[i]])/clim.effect$max  # Importance compare to the max one
-  ind.clim.bio.rel.imp[,EffectCol[i]] <- abs(clim.effect[,EffectCol[i]])/clim.effect$sum  # Relative importance compare to the others (sum is qual to one)
-}
-for (i in 1:length(EffectCum)){
-  ind.clim.bio.abs.imp[,EffectCum[i]] <- abs(clim.effect[,EffectCum[i]])/clim.effect$maxcum  # Importance compare to the max one
-  ind.clim.bio.rel.imp[,EffectCum[i]] <- abs(clim.effect[,EffectCum[i]])/clim.effect$sumcum  # Relative importance compare to the others (sum is qual to one)
-}
-
-
-save(ind.clim.bio.abs.imp, file="./ind_abs_imp_all_variables.RData") # to modify 
-save(ind.clim.bio.rel.imp, file="./ind_rel_imp_all_variables.RData") # to modify
-#load("./ind_rel_imp_all_variables.RData")
-
-
-ind.clim.bio.rel.imp$latitude_c <- cut(ind.clim.bio.rel.imp$latitude, seq(floor(min(ind.clim.bio.rel.imp$latitude)),ceiling(max(ind.clim.bio.rel.imp$latitude)),0.5))
-ind.clim.bio.abs.imp$latitude_c <- cut(ind.clim.bio.abs.imp$latitude, seq(floor(min(ind.clim.bio.abs.imp$latitude)),ceiling(max(ind.clim.bio.abs.imp$latitude)),0.5))
-
-t.mean.rel <- ddply(ind.clim.bio.rel.imp, .(latitude_c), colwise(mean,c(EffectAll)), .drop=F,na.rm=T) #ok 
-t.max.rel <- ddply(ind.clim.bio.rel.imp, .(latitude_c), colwise(max,na.rm=T,c(EffectAll)),.drop=F,na.rm=T,.inform = T) # Pbm with NA
-t.sd.rel <- ddply(ind.clim.bio.rel.imp, .(latitude_c), colwise(sd,c(EffectAll)), .drop=F,na.rm=T) #ok
-t.n.rel <- ddply(ind.clim.bio.rel.imp, .(latitude_c), colwise(length,c(EffectAll)), .drop=F) #ok
-
-t.mean.abs <- ddply(ind.clim.bio.abs.imp, .(latitude_c), colwise(mean,c(EffectAll)), .drop=F,na.rm=T) #ok 
-t.max.abs <- ddply(ind.clim.bio.abs.imp, .(latitude_c), colwise(max,na.rm=T,c(EffectAll)),.drop=F,na.rm=T,.inform = T) # Pbm with NA
-t.sd.abs <- ddply(ind.clim.bio.abs.imp, .(latitude_c), colwise(sd,c(EffectAll)), .drop=F,na.rm=T) #ok
-t.n.abs <- ddply(ind.clim.bio.abs.imp, .(latitude_c), colwise(length,c(EffectAll)), .drop=F) #ok
-
-for (i in 1:length(EffectAll)){
-  t.sd.rel[,paste0(EffectAll[i],"_se")] <- t.sd.rel[,EffectAll[i]]/sqrt(t.n.rel[,EffectAll[i]]) # Calcul of standard errors 
-  t.sd.abs[,paste0(EffectAll[i],"_se")] <- t.sd.abs[,EffectAll[i]]/sqrt(t.n.abs[,EffectAll[i]]) # Calcul of standard errors 
-}
-
-lats <- seq(floor(min(ind.clim.bio.rel.imp$latitude)),ceiling(max(ind.clim.bio.rel.imp$latitude)),0.5)[-1] # Remove the first 
-t.mean.rel$latitude <- lats
-t.sd.rel$latitude <- lats
-t.mean.abs$latitude <- lats
-t.sd.abs$latitude <- lats
-
-ind.rel.imp.clim.bio.long <- melt(t.mean.rel, id = "latitude", measure = c(EffectAll))
-names(ind.rel.imp.clim.bio.long) <- c("latitude", "variable", "mean")
-ind.abs.imp.clim.bio.long <- melt(t.mean.abs, id = "latitude", measure = c(EffectAll))
-names(ind.abs.imp.clim.bio.long) <- c("latitude", "variable", "mean")
-## error bands
-t.se.rel <- t.sd.rel[,(ncol(t.sd.rel)-length(EffectAll)):ncol(t.sd.rel)]
-colnames(t.se.rel) <- sub("_se","", colnames(t.se.rel), ignore.case = FALSE,fixed = T)
-ind.rel.imp.clim.bio.long.se <- melt(t.se.rel, id = "latitude", measure = c(EffectAll))
-names(ind.rel.imp.clim.bio.long.se) <- c("latitude", "variable", "se")
-
-t.se.abs <- t.sd.abs[,(ncol(t.sd.abs)-length(EffectAll)):ncol(t.sd.abs)]
-colnames(t.se.abs) <- sub("_se","", colnames(t.se.abs), ignore.case = FALSE,fixed = T)
-ind.abs.imp.clim.bio.long.se <- melt(t.se.abs, id = "latitude", measure = c(EffectAll))
-names(ind.abs.imp.clim.bio.long.se) <- c("latitude", "variable", "se")
-
-
-# merge the mean and the se dataframes
-clim.bio.rel <- merge(ind.rel.imp.clim.bio.long, ind.rel.imp.clim.bio.long.se, by=c("latitude", "variable"))
-clim.bio.rel$lwr <- clim.bio.rel$mean-(1.96*clim.bio.rel$se)
-clim.bio.rel$upr <- clim.bio.rel$mean+(1.96*clim.bio.rel$se) 
-clim.bio.rel$lwr <- ifelse(clim.bio.rel$lwr<0,0,clim.bio.rel$lwr)
-clim.bio.rel$upr <- ifelse(clim.bio.rel$upr>1,1,clim.bio.rel$upr)
-
-clim.bio.abs <- merge(ind.abs.imp.clim.bio.long, ind.abs.imp.clim.bio.long.se, by=c("latitude", "variable"))
-clim.bio.abs$lwr <- clim.bio.abs$mean-(1.96*clim.bio.abs$se)
-clim.bio.abs$upr <- clim.bio.abs$mean+(1.96*clim.bio.abs$se) 
-clim.bio.abs$lwr <- ifelse(clim.bio.abs$lwr<0,0,clim.bio.abs$lwr)
-clim.bio.abs$upr <- ifelse(clim.bio.abs$upr>1,1,clim.bio.abs$upr)
-
-save(clim.bio.rel, file=paste0("clim_bio_rel_",deparse(substitute(x)),".RData"))
-save(clim.bio.abs, file=paste0("clim_bio_abs_",deparse(substitute(x)),".RData"))
+### ggplot part = 4eme function  # to write 
 
 
 
 
-### ggplot part = 4eme function  
+
