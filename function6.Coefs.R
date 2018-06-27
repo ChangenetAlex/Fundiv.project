@@ -8,7 +8,11 @@ Saving(Mbin1FAGSYLspaMM)
 
 # get the parameter values from the glm model Unique parameters of the model
 library(reshape2)
-
+require(raster)
+library(ggplot2)
+library(mgcv)
+library(grid)
+library(Cairo)
 
 ExtracTest <- function(x){
         A <- paste0(getCall(x)[2])
@@ -219,8 +223,70 @@ Effect_summary(Mbin1FAGSYLspaMM,"competition")
 
 
 ### ggplot part = 4eme function  # to write 
+# un para is x (pour la base de données) et un y pour le effect individuel VS effet sum 
+# et un para pour les bandes ou pas 
+
+clim.bio.abs <- clim.bio.abs[clim.bio.abs$variable%in%EffectCol,] # If individual effect, this is what we want ! 
+clim.bio.abs <- clim.bio.abs[!(clim.bio.abs$variable%in%EffectCol),] # If only sum effect 
+clim.bio.abs[,"variable"] <- as.character(clim.bio.abs[,"variable"])
+
+p<-ggplot(clim.bio.abs) + 
+  theme_bw() + 
+  #theme_light(base_size = 15)+
+  ylab("Predicted relative importance") + 
+  scale_y_continuous(limits=c(-0.01,1)) +
+
+  theme(
+    plot.background = element_blank()
+    ,panel.grid.major = element_blank()
+    ,panel.grid.minor = element_blank()
+  ) +
+  
+  theme(axis.text.x = element_text(size=13),
+        text = element_text(face="bold"),#
+        legend.background=element_rect(fill="white",colour="black",size=0.2),#
+        panel.border = element_rect(colour = "black", fill=NA, size=0.8),#
+        axis.line = element_line(colour="black"),#
+        plot.title = element_text(size=18,hjust = 0.5),#
+        plot.caption = element_text(face="bold.italic"),#
+        axis.text.y = element_text(size=12),  
+        axis.title.x = element_text(size=14),
+        axis.title.y = element_text(size=14),
+        legend.position="bottom",
+        legend.title=element_blank(),
+        legend.key=element_blank(),
+        legend.text = element_text(size=12),
+        legend.key.height=unit(2,"line"),
+        legend.key.width=unit(4,"line")
+  )
 
 
+missing <- data.frame(xmin=55,xmax=56.5, ymin=Inf, ymax=-Inf) # Identify the missing values automatically 
+Mycol <- c("red","dark green", "dodgerblue3","orange","yellow","gray")
+EffectCol <- unique(clim.bio.abs[,"variable"])
+par(mar=c(0, 0, 0, 0), xaxs = "i", yaxs = "i")
+p <- p + geom_line(aes(latitude, mean, colour = as.character(variable)), size=0.8) +
+  guides(linetype=FALSE, fill=FALSE) +
+  guides(col=guide_legend(ncol=3, byrow=F)) +
+  scale_colour_manual(values=c(Mycol[1:length(EffectCol)]),
+                      labels=EffectCol) +
+  geom_ribbon(data=clim.bio.abs,aes(latitude, mean, ymin=lwr, ymax=upr, colour=variable, fill=variable),alpha=0.05, linetype=2)+
+   geom_rect(data=missing, aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax),colour="light grey", fill="white", inherit.aes=FALSE) +
+  geom_rect(xmin=min(clim.bio.abs$latitude), xmax=max(clim.bio.abs$latitude), ymin=-0.025, ymax=0,colour="black", fill="black")+
+  geom_rect(xmin=0,xmax=42.5,ymin=-Inf,ymax=-0.025,colour="black", fill="red",alpha=0.2)+
+  #annotate("text", label = "Mediterranean", x=39.25, y=-0.01, vjust=1.2, size=3.3)+
+  geom_rect(xmin=42.5,xmax=58,ymin=-Inf,ymax=-0.025,colour="black", fill="green",alpha=0.5)+
+  geom_rect(xmin=58,xmax=Inf,ymin=-Inf,ymax=-0.025,colour="black", fill="blue",alpha=0.8)+
+    geom_text(label = "Mediterranean", x=42.5, y=-0.01, size=4,vjust=2.5) +
+    geom_text(label = "Temperate", x=50, y=-0.01, size=4,vjust=2.5) +
+    geom_text(label = "Boreal", x=58, y=-0.01, size=4,vjust=2.5) +
+  geom_segment(x=min(clim.bio.abs$latitude), y=-0.02, xend=min(clim.bio.abs$latitude), yend=Inf, colour="black", size=0.1,linetype=11) +
+  geom_segment(x=max(clim.bio.abs$latitude), y=-0.02, xend=max(clim.bio.abs$latitude), yend=Inf, colour="black", size=0.1,linetype=11) +
+  geom_segment(x=58, y=-0.02, xend=58, yend=Inf, colour="light grey", size=0.1,linetype=2) +
+  geom_segment(x=42.5, y=-0.02, xend=42.5,yend=Inf, colour="light grey", size=0.1,linetype=2) +
+  labs(caption="Changenet et al. 2018")
+p
 
 
-
+print(p)
+dev.off()
