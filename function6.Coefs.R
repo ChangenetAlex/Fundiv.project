@@ -1,18 +1,64 @@
-Mbin1FAGSYLspaMM <- fitme(sp.mort.bin ~ 0 + treeNbr + yearsbetweensurveys + min_spei01 + mean_spei01 + min_spei06 + mean_spei06 + min_spei12 + mean_spei12 + min_spei24 + mean_spei24 + min_spei48 + mean_spei48 + BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + logbio1 + bio14_climate_mean.30 + logbio14 + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BA.ha.plot.1:bio1_climate_mean.30 + BA.ha.plot.1:logbio1 + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:logbio1 + BA.ha.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:logbio14 + BAj.plot.1:bio14_climate_mean.30 + BAj.plot.1:logbio14 + BA.ha.plot.1:BAj.plot.1 + bio1_climate_mean.30:bio14_climate_mean.30 + logbio1:logbio14 + BA.ha.plot.1:Plotcat + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + Plotcat:logbio1 + Plotcat:logbio14 + (1|country), data=dfplot2,family = binomial(),method='REML')
-Mbin1FAGSYLspaMM <- fitme(sp.mort.bin ~ treeNbr + yearsbetweensurveys + min_spei01 + mean_spei01 + min_spei06 + mean_spei06 + min_spei12 + mean_spei12 + min_spei24 + mean_spei24 + min_spei48 + mean_spei48 + BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + logbio1_climate_mean.30 + bio14_climate_mean.30 + logbio14_climate_mean.30 + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BA.ha.plot.1:bio1_climate_mean.30 + BA.ha.plot.1:logbio1_climate_mean.30 + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:logbio1_climate_mean.30 + BA.ha.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:logbio14_climate_mean.30 + BAj.plot.1:bio14_climate_mean.30 + BAj.plot.1:logbio14_climate_mean.30 + BA.ha.plot.1:BAj.plot.1 + bio1_climate_mean.30:bio14_climate_mean.30 + logbio1_climate_mean.30:logbio14_climate_mean.30 + BA.ha.plot.1:Plotcat + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + Plotcat:logbio1_climate_mean.30 + Plotcat:logbio14_climate_mean.30 + (1|country), data=dfplot2,family = binomial(),method='REML')
-Saving(Mbin1FAGSYLspaMM)
+# Alex on the 26/06/2018
+# Adapted from Sophie Radcliffe and Juliette Archambau 
+# Multiple functions to process the coeffficient of my models according to the latitude 
+
+SavingInfo = "
+####### function 1 ########
+
+ExatracTest gives the parameters list of the model
+Exemple : ExtracTest(Mbin1FAGSYLspaMM) # Me donne la liste des paramètres de mon modèles. 
+
+####### function 2 ########
+
+Effect_coef extract the calculation of the parameters that we want automatically (taking into account the log and the quadratic effect)
+Example : 
+for (i in c('BAIj.plot.bis','BA.ha.plot.1','BAj.plot.1','treeNbr','bio1_climate_mean.30','bio14_climate_mean.30')){
+  Effect_coef(Mbin1FAGSYLspaMM,i)}
+
+! ! !  WARNINGS  ! ! !  ! ! !  WARNINGS  ! ! !   ! ! !  WARNINGS  ! ! ! 
+
+# In the model, interactions parameters have to be after log, quadratic and simple effects
+# Also, transformed names have to be the same as non transformed names : For instance 
+bio1_climate_mean.30 become logbio1_climate_mean.30 if logscaled. 
+
+! ! !  WARNINGS  ! ! !  ! ! !  WARNINGS  ! ! !   ! ! !  WARNINGS  ! ! ! 
 
 
-# Dans mon modèle, les paramètres d'interactions doivent être après les para log, seuls et cubique
-# Les noms des variables scaled doivent être les même que les non scales et pas une abbréviation
+####### function 3 ########
+Effect_summary is the Summary by latitude of the effects I want and effects regroupement (competition,biotic,climate) # Cf script for more details 
 
-# get the parameter values from the glm model Unique parameters of the model
-library(reshape2)
-require(raster)
-library(ggplot2)
-library(mgcv)
-library(grid)
-library(Cairo)
+Example : Effect_summary(x,BioticPara='competition')
+
+####### function 4 ########
+ggeffect allow to plot this parameters
+x is my model
+y is the kind of info that i want either 'ABS' for absolute values (compared to 0), either 'REL' for comparison between each parameters
+effects is the parameters we xould like to plot. it can be either 'indiv' for simple effects, or 'sum' for synthetic effect such as copetition or climate
+
+Example : ggEffect <- function(x,y='REL',effect='sum')
+"
+bannerBreak = "\n*********************************************************************\n"
+cat(paste0(bannerBreak,SavingInfo,bannerBreak,"\n"))
+
+
+
+################################################################################
+
+################################################################################
+
+
+#### Load libraries #######
+library(reshape2)         #
+require(raster)           #
+library(ggplot2)          #
+library(mgcv)             # 
+library(grid)             #
+library(Cairo)            #
+###########################
+
+
+
+### Obtain the para #######
 
 ExtracTest <- function(x){
         A <- paste0(getCall(x)[2])
@@ -33,6 +79,10 @@ ExtracTest <- function(x){
         A <- unique(A)
         A
 }
+
+
+### Calculation of each effect that I specify ###
+
 Effect_coef <- function(x,y){
   if (grepl(deparse(substitute(x)),pattern="bin",fixed=T)==T){
     Dir <- paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/FAGSYL/CLIMAP/Models/binomial/",deparse(substitute(x)),"/")
@@ -60,8 +110,11 @@ Effect_coef <- function(x,y){
         clim.effect <- as.data.frame(clim.effect)
         save(clim.effect, file=paste0("clim_effect_",deparse(substitute(x)),".RData"))
         print(clim.effect[1:10,]) # Check if I have all the columns I want 
-        }
-Effect_summary <- function(x,BioticPara){
+}
+
+### Summary by latitude of the effects I want and effects regroupement (competition,biotic, climate) ###
+
+Effect_summary <- function(x,BioticPara="competition"){
   if (grepl(deparse(substitute(x)),pattern="bin",fixed=T)==T){
     Dir <- paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/FAGSYL/CLIMAP/Models/binomial/",deparse(substitute(x)),"/")
   }else Dir <- paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/FAGSYL/CLIMAP/Models/Negbin/",deparse(substitute(x)),"/")
@@ -109,7 +162,7 @@ Effect_summary <- function(x,BioticPara){
   ## Competition ##    # Same as Biotic But the BAI is removed since it is a growth param                                     #
   #################                                                                                                           #
   } else {Var.comp <- grep(Var,pattern = paste(c("BA","tree"),collapse="|"),value=T,invert=F)                                 #
-  Var.comp <- grep(Var.biotic,pattern = "BAI",fixed=T,value=T,invert=T)}                                                      #
+  Var.comp <- grep(Var.comp,pattern = "BAI",fixed=T,value=T,invert=T)}                                                      #
   ################                                                                                                            #
   ##  Climatic  ##     ## Variable de climat (spei + worlclim)                                                                #
   ################                                                                                                            #
@@ -215,78 +268,105 @@ Effect_summary <- function(x,BioticPara){
   save(clim.bio.abs, file=paste0("clim_bio_abs_",deparse(substitute(x)),".RData"))
 }
 
-
-ExtracTest(Mbin1FAGSYLspaMM) # Me donne la liste des paramètres de mon modèles. 
-for (i in c("BAIj.plot.bis","BA.ha.plot.1","BAj.plot.1","treeNbr","bio1_climate_mean.30","bio14_climate_mean.30")){
-  Effect_coef(Mbin1FAGSYLspaMM,i)}     # Para que l'on veut regarder   
-Effect_summary(Mbin1FAGSYLspaMM,"competition")
-
-
-### ggplot part = 4eme function  # to write 
-# un para is x (pour la base de données) et un y pour le effect individuel VS effet sum 
-# et un para pour les bandes ou pas 
-
-clim.bio.abs <- clim.bio.abs[clim.bio.abs$variable%in%EffectCol,] # If individual effect, this is what we want ! 
-clim.bio.abs <- clim.bio.abs[!(clim.bio.abs$variable%in%EffectCol),] # If only sum effect 
-clim.bio.abs[,"variable"] <- as.character(clim.bio.abs[,"variable"])
-
-p<-ggplot(clim.bio.abs) + 
-  theme_bw() + 
-  #theme_light(base_size = 15)+
-  ylab("Predicted relative importance") + 
-  scale_y_continuous(limits=c(-0.01,1)) +
-
-  theme(
-    plot.background = element_blank()
-    ,panel.grid.major = element_blank()
-    ,panel.grid.minor = element_blank()
-  ) +
+### Representation on a plot of the parameters extracted 
+ggEffect <- function(x,y="REL",effect="sum"){
+  if (y=="ABS"){clim.bio <- get(load(paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",
+                                            CODE,"/CLIMAP/Models/binomial/",
+                                            deparse(substitute(x)),"/clim_bio_abs_",
+                                            deparse(substitute(x)),".RData")))
+  }else if(y=="REL"){clim.bio <- get(load(paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",
+                                                 CODE,"/CLIMAP/Models/binomial/",
+                                                 deparse(substitute(x)),"/clim_bio_rel_",
+                                                 deparse(substitute(x)),".RData")))}
+  ## Effect names 
+  EffectCol <- grep(as.character(unique(clim.bio$variable)),pattern = "effect",fixed=T,value=T,invert=F) # Simple effect columns for which coef were extracted
   
-  theme(axis.text.x = element_text(size=13),
-        text = element_text(face="bold"),#
-        legend.background=element_rect(fill="white",colour="black",size=0.2),#
-        panel.border = element_rect(colour = "black", fill=NA, size=0.8),#
-        axis.line = element_line(colour="black"),#
-        plot.title = element_text(size=18,hjust = 0.5),#
-        plot.caption = element_text(face="bold.italic"),#
-        axis.text.y = element_text(size=12),  
-        axis.title.x = element_text(size=14),
-        axis.title.y = element_text(size=14),
-        legend.position="bottom",
-        legend.title=element_blank(),
-        legend.key=element_blank(),
-        legend.text = element_text(size=12),
-        legend.key.height=unit(2,"line"),
-        legend.key.width=unit(4,"line")
-  )
+  ## Individual effects vs sum of the effects 
+  if (effect=="indiv"){clim.bio <- clim.bio[clim.bio$variable%in%EffectCol,] # If individual, keep these individual effects 
+  }else if (effect=="sum"){
+    clim.bio <- clim.bio[!(clim.bio$variable%in%EffectCol),] # If not, keep all the orther effects who have not "effect in their names"
+    EffectCol <- as.character(unique(clim.bio$variable))}    # Exatrct these sum effects and put it in the initial vector
+  clim.bio[,"variable"] <- as.character(clim.bio[,"variable"]) # Transfrom the factor as a charcater vector
+  
+  # Find my missing values 
+  A <- unique(clim.bio[is.na(clim.bio$se),"latitude"])
+  missing <- data.frame(xmin=A,xmax=A+0.5, ymin=rep(Inf,length=length(A)), ymax=rep(-Inf,length=length(A))) # Identify the missing values automatically 
+  i = 1
+  while (is.na(missing$xmin[i+1])==F){
+    if (missing$xmax[i+1]-missing$xmax[i]==0.5){
+      while (missing$xmax[i+1]-missing$xmax[i]==0.5 & is.na(missing$xmax[i+1])==F){
+        missing$xmax[i] <- missing$xmax[i+1]
+        missing <- missing[-c(i+1),]
+      }} else i=i+1
+  }
+  
+  Mycol <- c("red","dark green", "dodgerblue3","orange","yellow","gray","black","green") #### The colors that I will use 
+  
+  # The plot theme 
+  p<-ggplot(clim.bio) + 
+    theme_bw()
+  if (y=="ABS"){p <- p + ylab("Predicted absolute importance")
+  }else if(y=='REL'){p <- p + ylab("Predicted relative importance")}
+    p <- p + scale_y_continuous(limits=c(-0.01,1)) +
+    theme(
+      plot.background = element_blank()
+      ,panel.grid.major = element_blank()
+      ,panel.grid.minor = element_blank()
+    ) +
+    theme(axis.text.x = element_text(size=15),
+          text = element_text(face="bold"),#
+          legend.background=element_rect(fill="white",colour="black",size=0.2),#
+          panel.border = element_rect(colour = "black", fill=NA, size=0.8),#
+          axis.line = element_line(colour="black"),#
+          plot.title = element_text(size=18,hjust = 0.5),#
+          plot.caption = element_text(face="bold.italic"),#
+          axis.text.y = element_text(size=15),  
+          axis.title.x = element_text(size=20),
+          axis.title.y = element_text(size=20),
+          legend.position="bottom",
+          legend.title=element_blank(),
+          legend.key=element_blank(),
+          legend.key.size = unit(5, 'lines'),
+          legend.text = element_text(size=14,face="bold"),
+          legend.key.height=unit(2,"line"),
+          legend.key.width=unit(5,"line")
+    )
+  # The plot 
+  par(mar=c(0, 0, 0, 0), xaxs = "i", yaxs = "i")
+  p <- p + geom_line(aes(latitude, mean, colour = as.character(variable)), size=0.8) +
+    guides(linetype=FALSE, fill=FALSE) +
+    guides(col=guide_legend(ncol=3, byrow=F))
+  if (effect=="indiv"){p <- p + scale_colour_manual(values=c(Mycol[1:length(EffectCol)]),labels=paste0("  ",EffectCol,"  "))
+  } else if (effect=="sum"){p <- p + scale_colour_manual(values=c("darkorchid4","orange"),labels=paste0("  ",EffectCol,"  "))}
+  
+  p <- p + geom_ribbon(data=clim.bio,aes(latitude, mean, ymin=lwr, ymax=upr, colour=variable, fill=variable),alpha=0.05, linetype=2)+
+    geom_rect(data=missing, aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax),colour="light grey", fill="white", inherit.aes=FALSE) +
+    geom_rect(xmin=min(clim.bio$latitude), xmax=max(clim.bio$latitude), ymin=-0.025, ymax=0,colour="black", fill="black")+
+    geom_rect(xmin=0,xmax=42.5,ymin=-Inf,ymax=-0.025,colour="black", fill="red",alpha=0.2)+
+    geom_rect(xmin=42.5,xmax=58,ymin=-Inf,ymax=-0.025,colour="black", fill="green",alpha=0.5)+
+    geom_rect(xmin=58,xmax=Inf,ymin=-Inf,ymax=-0.025,colour="black", fill="blue",alpha=0.8)+
+    geom_label(label = "Mediterranean", x=42.5, y=-0.01, size=3.5,vjust=2.2,label.padding = unit(0.15, "lines"),
+               label.r = unit(0.15, "lines"),colour="white",fill="red",label.size = 0.2)+
+    geom_label(label = "Temperate", x=50, y=-0.01, size=3.5,vjust=2.2,label.padding = unit(0.15, "lines"),
+               label.r = unit(0.15, "lines"),colour="white",fill="darkgreen",label.size = 0.2)+
+    geom_label(label = "Boreal", x=58, y=-0.01, size=3.5,vjust=2.2,label.padding = unit(0.15, "lines"),
+               label.r = unit(0.15, "lines"),colour="white",fill="blue",label.size = 0.2)+
+    geom_segment(x=min(clim.bio$latitude), y=-0.02, xend=min(clim.bio$latitude), yend=Inf, colour="black", size=0.1,linetype=11) +
+    geom_segment(x=max(clim.bio$latitude), y=-0.02, xend=max(clim.bio$latitude), yend=Inf, colour="black", size=0.1,linetype=11) +
+    geom_segment(x=58, y=-0.02, xend=58, yend=Inf, colour="light grey", size=0.1,linetype=2) +
+    geom_segment(x=42.5, y=-0.02, xend=42.5,yend=Inf, colour="light grey", size=0.1,linetype=2) +
+    labs(caption="Changenet et al. 2018")
+  print(p)
+  ggsave(filename = paste0(y,"_",effect,"_",CODE,"_",deparse(substitute(x)),".png"),plot = p, width = 7, height = 6, dpi=300) # Save 
+}
+
+Mbin1FAGSYLspaMM <- get(load("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/FAGSYL/CLIMAP/Models/binomial/Mbin1FAGSYLspaMM/Mbin1FAGSYLspaMM.rda"))
+ExtracTest(Mbin1FAGSYLspaMM) # Me donne la liste des paramètres de mon modèles. 
+for (i in c("BAIj.plot.bis","BA.ha.plot.1","BAj.plot.1","treeNbr","bio1_climate_mean.30","bio14_climate_mean.30","min_spei12","mean_spei12")){
+  Effect_coef(Mbin1FAGSYLspaMM,i)}     # Para que l'on veut regarder  parmis ceux citer  
+Effect_summary(Mbin1FAGSYLspaMM,"competition") #
+ggEffect(Mbin1FAGSYLspaMM,'REL',"sum")
 
 
-missing <- data.frame(xmin=55,xmax=56.5, ymin=Inf, ymax=-Inf) # Identify the missing values automatically 
-Mycol <- c("red","dark green", "dodgerblue3","orange","yellow","gray")
-EffectCol <- unique(clim.bio.abs[,"variable"])
-par(mar=c(0, 0, 0, 0), xaxs = "i", yaxs = "i")
-p <- p + geom_line(aes(latitude, mean, colour = as.character(variable)), size=0.8) +
-  guides(linetype=FALSE, fill=FALSE) +
-  guides(col=guide_legend(ncol=3, byrow=F)) +
-  scale_colour_manual(values=c(Mycol[1:length(EffectCol)]),
-                      labels=EffectCol) +
-  geom_ribbon(data=clim.bio.abs,aes(latitude, mean, ymin=lwr, ymax=upr, colour=variable, fill=variable),alpha=0.05, linetype=2)+
-   geom_rect(data=missing, aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax),colour="light grey", fill="white", inherit.aes=FALSE) +
-  geom_rect(xmin=min(clim.bio.abs$latitude), xmax=max(clim.bio.abs$latitude), ymin=-0.025, ymax=0,colour="black", fill="black")+
-  geom_rect(xmin=0,xmax=42.5,ymin=-Inf,ymax=-0.025,colour="black", fill="red",alpha=0.2)+
-  #annotate("text", label = "Mediterranean", x=39.25, y=-0.01, vjust=1.2, size=3.3)+
-  geom_rect(xmin=42.5,xmax=58,ymin=-Inf,ymax=-0.025,colour="black", fill="green",alpha=0.5)+
-  geom_rect(xmin=58,xmax=Inf,ymin=-Inf,ymax=-0.025,colour="black", fill="blue",alpha=0.8)+
-    geom_text(label = "Mediterranean", x=42.5, y=-0.01, size=4,vjust=2.5) +
-    geom_text(label = "Temperate", x=50, y=-0.01, size=4,vjust=2.5) +
-    geom_text(label = "Boreal", x=58, y=-0.01, size=4,vjust=2.5) +
-  geom_segment(x=min(clim.bio.abs$latitude), y=-0.02, xend=min(clim.bio.abs$latitude), yend=Inf, colour="black", size=0.1,linetype=11) +
-  geom_segment(x=max(clim.bio.abs$latitude), y=-0.02, xend=max(clim.bio.abs$latitude), yend=Inf, colour="black", size=0.1,linetype=11) +
-  geom_segment(x=58, y=-0.02, xend=58, yend=Inf, colour="light grey", size=0.1,linetype=2) +
-  geom_segment(x=42.5, y=-0.02, xend=42.5,yend=Inf, colour="light grey", size=0.1,linetype=2) +
-  labs(caption="Changenet et al. 2018")
-p
 
 
-print(p)
-dev.off()

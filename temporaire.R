@@ -133,6 +133,7 @@ Resp <- c("sp.mort.bin")
 Premodel(z=dfplot2,Resp=Resp,Explain=Explain,size=4,save=T)
 Dir =c(paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models/binomial"))
 setwd(Dir)
+## Transfo variables 
 dfplot2$logbio1_climate_mean.30 <- log(dfplot2$bio1_climate_mean.30 + 5)
 dfplot2$logbio14_climate_mean.30 <- log(dfplot2$bio14_climate_mean.30 + 5)
 
