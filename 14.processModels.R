@@ -1,0 +1,125 @@
+rm(list = ls())
+gc()
+require(ade4)
+library(sjPlot) 
+library(lattice)
+library(latticeExtra)
+library(stringr)
+library(data.table)
+library(pscl)
+library(MASS)
+library(lme4)
+library("glmmTMB")
+library("bbmle")
+library(piecewiseSEM)
+library(pgirmess)
+library(MuMIn)
+library(spaMM)
+
+
+###################################################################################
+###                                                                            ####
+###                                                                            #### # Here, 6 scripts are run
+###     PART two : how to extract the information we want for all species      ####
+###                                                                            ####
+###                                                                            ####
+###################################################################################
+Dir = c("/Users/alexandrechangenet/Dropbox/FUNDIV/") # Directory 
+Dir <- c("/home/achangenet/Documents/FUNDIV - NFI - Europe/")
+
+setwd(Dir)
+# Load the function 
+source(paste0(Dir,"Myscripts/Fundiv.project/function1.R.squared.r"))
+source(paste0(Dir,"Myscripts/Fundiv.project/function2.Saving.R"))
+source(paste0(Dir,"Myscripts/Fundiv.project/function3.ModelBoot.R"))
+source(paste0(Dir,"Myscripts/Fundiv.project/function4.Diagnostic.R"))
+source(paste0(Dir,"Myscripts/Fundiv.project/function5.Premodel.R"))
+source(paste0(Dir,"Myscripts/Fundiv.project/function6.Coefs.R"))
+
+#Extraction of the database of the wanted species : 
+
+CODE = "FAGSYL" 
+#"ALNGLU" 
+#"ABIALB"
+#"BETPEN"
+#"PICABI"
+#"PINPINA"
+#"FAGSYL"
+#"PINHAL"
+#"QUEROB"
+#"QUEILE"
+#"PINNIG"
+#"QUEPET"
+#"CASSAT"
+#"ABIALB"
+#"QUEPUB"
+#"QUEPYR"
+#"FRAEXC"
+#"PINPIN"
+#"QUESUB"
+#"BETPEN"
+#"ALNGLU"
+#"POPTRE"
+#"ACEPSE"
+#"LARDEC"
+#"POPNIG"
+
+# Load the df
+
+seuil = 0.80
+#Dir = c(paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models")) # Directory 
+Dir = (paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP")) # Directory 
+setwd(Dir)
+list.files(Dir,pattern = paste0(seuil,".rds"))
+dfplot <- readRDS(paste0("dfplot",CODE,seuil,".rds")) #Base de données plot
+#dfplot2 <- readRDS(paste0("dfplot2",CODE,seuil,".rds")) #Base de données plot
+dfplot2 <- readRDS(paste0("dfplot2",CODE,seuil,".rds")) #Base de données plot
+dir.create(path=paste0(Dir,"/Models"))
+dir.create(path=paste0(Dir,"/Models/Negbin"))
+dir.create(path=paste0(Dir,"/Models/binomial"))
+Dir =c(paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models"))
+setwd(Dir)
+
+
+
+# Premodel
+Explain <- c(Explain,"min_spei12","mean_spei12")
+Explain <- Explain[c(1:5,7,8,6)]
+Resp <- c("sp.mort.bin")
+Premodel(z=dfplot2,Resp=Resp,Explain=Explain,size=4,save=T)
+Dir =c(paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models/binomial"))
+setwd(Dir)
+
+## Transfo variables 
+dfplot2$logbio1_climate_mean.30 <- log(dfplot2$bio1_climate_mean.30 + 5)
+dfplot2$logbio14_climate_mean.30 <- log(dfplot2$bio14_climate_mean.30 + 5)
+
+# Models 
+Mbin1FAGSYL <- fitme(sp.mort.bin ~ treeNbr + yearsbetweensurveys + min_spei01 + mean_spei01 + min_spei06 + mean_spei06 + min_spei12 + mean_spei12 + min_spei24 + mean_spei24 + min_spei48 + mean_spei48 + BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + logbio1 + bio14_climate_mean.30 + logbio14 + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BA.ha.plot.1:bio1_climate_mean.30 + BA.ha.plot.1:logbio1 + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:logbio1 + BA.ha.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:logbio14 + BAj.plot.1:bio14_climate_mean.30 + BAj.plot.1:logbio14 + BA.ha.plot.1:BAj.plot.1 + bio1_climate_mean.30:bio14_climate_mean.30 + logbio1:logbio14 + BA.ha.plot.1:Plotcat + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + Plotcat:logbio1 + Plotcat:logbio14 + (1|country), data=dfplot2,family = binomial(),method='REML')
+Mbin1FAGSYL <- fitme(sp.mort.bin ~ treeNbr + yearsbetweensurveys + min_spei01 + mean_spei01 + min_spei06 + mean_spei06 + min_spei12 + mean_spei12 + min_spei24 + mean_spei24 + min_spei48 + mean_spei48 + BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + logbio1 + bio14_climate_mean.30 + logbio14 + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BA.ha.plot.1:bio1_climate_mean.30 + BA.ha.plot.1:logbio1 + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:logbio1 + BA.ha.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:logbio14 + BAj.plot.1:bio14_climate_mean.30 + BAj.plot.1:logbio14 + BA.ha.plot.1:BAj.plot.1 + bio1_climate_mean.30:bio14_climate_mean.30 + logbio1:logbio14 + BA.ha.plot.1:Plotcat + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + Plotcat:logbio1 + Plotcat:logbio14 + (1|country), data=dfplot2,family = binomial(),method='REML')
+
+Mbin2FAGSYLspaMM <- fitme(sp.mort.bin ~ treeNbr + yearsbetweensurveys + min_spei12 + mean_spei12 + min_spei24 + BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + logbio1_climate_mean.30 + bio14_climate_mean.30 + logbio14_climate_mean.30 + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BA.ha.plot.1:bio1_climate_mean.30 + BA.ha.plot.1:logbio1_climate_mean.30 + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:logbio1_climate_mean.30 + BA.ha.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:logbio14_climate_mean.30 + BAj.plot.1:bio14_climate_mean.30 + BAj.plot.1:logbio14_climate_mean.30 + BA.ha.plot.1:BAj.plot.1 + bio1_climate_mean.30:bio14_climate_mean.30 + logbio1_climate_mean.30:logbio14_climate_mean.30 + BA.ha.plot.1:min_spei12 + BA.ha.plot.1:mean_spei12 + BAj.plot.1:min_spei12 + BAj.plot.1:mean_spei12 + bio1_climate_mean.30:min_spei12 + bio1_climate_mean.30:mean_spei12 + bio14_climate_mean.30:min_spei12 + bio14_climate_mean.30:mean_spei12 + BA.ha.plot.1:Plotcat + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + Plotcat:logbio1_climate_mean.30 + Plotcat:logbio14_climate_mean.30 + Plotcat:min_spei12 + Plotcat:mean_spei12 + (1 | country), data=dfplot2,family = binomial(),method='REML')
+Mbin3FAGSYLspaMM <- fitme(sp.mort.bin ~ treeNbr + yearsbetweensurveys + min_spei12 + mean_spei12 + BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + logbio1_climate_mean.30 + bio14_climate_mean.30 + logbio14_climate_mean.30 + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BA.ha.plot.1:bio1_climate_mean.30 + BA.ha.plot.1:logbio1_climate_mean.30 + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:logbio1_climate_mean.30 + bio1_climate_mean.30:bio14_climate_mean.30 + logbio1_climate_mean.30:logbio14_climate_mean.30 + BA.ha.plot.1:min_spei12 + BA.ha.plot.1:mean_spei12 + bio1_climate_mean.30:min_spei12 + BA.ha.plot.1:Plotcat + Plotcat:min_spei12 + Plotcat:mean_spei12 + (1 | country), data=dfplot2,family = binomial(),method='REML')
+
+Mbin1FAGSYL <- fitme(sp.mort.bin ~ treeNbr + yearsbetweensurveys + min_spei01 + mean_spei01 + min_spei06 + mean_spei06 + min_spei12 + mean_spei12 + min_spei24 + mean_spei24 + min_spei48 + mean_spei48 + BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + log(bio1_climate_mean.30+5) + bio14_climate_mean.30 + log(bio14_climate_mean.30+5) + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BA.ha.plot.1:bio1_climate_mean.30 + BA.ha.plot.1:log(bio1_climate_mean.30+5) + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:log(bio1_climate_mean.30+5) + BA.ha.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:log(bio14_climate_mean.30+5) + BAj.plot.1:bio14_climate_mean.30 + BAj.plot.1:log(bio14_climate_mean.30+5) + BA.ha.plot.1:BAj.plot.1 + bio1_climate_mean.30:bio14_climate_mean.30 + log(bio1_climate_mean.30+5):log(bio14_climate_mean.30+5) + BA.ha.plot.1:Plotcat + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + Plotcat:log(bio1_climate_mean.30+5) + Plotcat:log(bio14_climate_mean.30+5) + (1|country), data=dfplot2,family = binomial(),method='REML')
+Mbin1FAGSYL <- fitme(sp.mort.bin ~ treeNbr + yearsbetweensurveys + min_spei01 + mean_spei01 + min_spei06 + mean_spei06 + min_spei12 + mean_spei12 + min_spei24 + mean_spei24 + min_spei48 + mean_spei48 + BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + bio14_climate_mean.30 + log(dfplot2$bio14_climate_mean.30+5) + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BA.ha.plot.1:bio1_climate_mean.30 + BA.ha.plot.1:log(bio1_climate_mean.30+1) + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:log(bio1_climate_mean.30+1) + BA.ha.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:log(bio14_climate_mean.30+1) + BAj.plot.1:bio14_climate_mean.30 + BAj.plot.1:log(bio14_climate_mean.30+1) + BA.ha.plot.1:BAj.plot.1 + bio1_climate_mean.30:bio14_climate_mean.30 + log(bio1_climate_mean.30+1):log(bio14_climate_mean.30+1) + BA.ha.plot.1:Plotcat + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + Plotcat:log(bio1_climate_mean.30+1) + Plotcat:log(bio14_climate_mean.30+1) + (1|country), data=dfplot2,family = binomial(),method='REML')
+Mbin80EtestOffsetPINSYL <- fitme(sp.mort.bin ~ BAIj.plot.bis + treeNbr +  offset(log(yearsbetweensurveys)) + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + bio14_climate_mean.30 + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:BAj.plot.1 + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + (1|country), data=dfplot2, family = binomial(link = "cloglog"),method='REML')
+
+### Load preexisting models 
+list.dirs(getwd())
+setwd(list.dirs(getwd())[2]) # Chose the model file
+list.files()
+Mbin80EtestOffset <- get(load(file = "Mbin80EtestOffset.rda")) 
+rm("x")
+
+
+# Process the models : bootstrap and coefficient, saving etc 
+Saving(Mbin3FAGSYLspaMM) # Evaluation of the model 
+Extraction(Mbin3FAGSYLspaMM)
+ModelBoot(Mbin3FAGSYLspaMM,4,12,LvL=30,CAT=CAT,nBoot=10,Yportion = 0.80,saveboot=T,nCoeur=10)
+Diagnostic(Mbin3FAGSYLspaMM,0.66,F)
+ExtracTest(Mbin3FAGSYLspaMM) # Me donne la liste des paramètres de mon modèles. 
+for (i in c("BAIj.plot.bis","BA.ha.plot.1","BAj.plot.1","treeNbr","bio1_climate_mean.30","bio14_climate_mean.30","min_spei12","mean_spei12")){
+  Effect_coef(Mbin3FAGSYLspaMM,i)}     # Para que l'on veut regarder  parmis ceux citer  
+Effect_summary(Mbin3FAGSYLspaMM,"competition") #
+ggEffect(Mbin3FAGSYLspaMM,'ABS',"indiv",band=T)

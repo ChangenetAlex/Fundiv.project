@@ -53,7 +53,7 @@ require(raster)           #
 library(ggplot2)          #
 library(mgcv)             # 
 library(grid)             #
-library(Cairo)            #
+#library(Cairo)           #
 ###########################
 
 
@@ -61,23 +61,23 @@ library(Cairo)            #
 ### Obtain the para #######
 
 ExtracTest <- function(x){
-        A <- paste0(getCall(x)[2])
-        A <- unlist(strsplit(A, "~",fixed = T))[2]
-        A <- unlist(strsplit(A, "+",fixed = T))
-        A <- grep(A,pattern = "|",fixed=T,value=T,invert=T)
-        A <- grep(A,pattern = ":",fixed=T,value=T,invert=T)
-        A <- grep(A,pattern = "e)",fixed=T,value=T,invert=T) #Remove the AC term which remains
-        A <- sub("I(","", A, ignore.case = FALSE,fixed = T)
-        A <- sub("^2)","", A, ignore.case = FALSE,fixed = T)
-        A <- sub("offset(log(","", A, ignore.case = FALSE,fixed = T)
-        A <- sub("))","", A, ignore.case = FALSE,fixed = T)
-        A <- sub("\n ","", A, ignore.case = FALSE,fixed = T) # New line
-        A <- sub("  ","", A, ignore.case = FALSE,fixed = T)
-        A <- sub(" ","", A, ignore.case = FALSE,fixed = T) #Twice
-        A <- sub(" ","", A, ignore.case = FALSE,fixed = T) #Twice
-        assign("A",unique(A),envir = .GlobalEnv) 
-        A <- unique(A)
-        A
+  A <- paste0(getCall(x)[2])
+  A <- unlist(strsplit(A, "~",fixed = T))[2]
+  A <- unlist(strsplit(A, "+",fixed = T))
+  A <- grep(A,pattern = "|",fixed=T,value=T,invert=T)
+  A <- grep(A,pattern = ":",fixed=T,value=T,invert=T)
+  A <- grep(A,pattern = "e)",fixed=T,value=T,invert=T) #Remove the AC term which remains
+  A <- sub("I(","", A, ignore.case = FALSE,fixed = T)
+  A <- sub("^2)","", A, ignore.case = FALSE,fixed = T)
+  A <- sub("offset(log(","", A, ignore.case = FALSE,fixed = T)
+  A <- sub("))","", A, ignore.case = FALSE,fixed = T)
+  A <- sub("\n ","", A, ignore.case = FALSE,fixed = T) # New line
+  A <- sub("  ","", A, ignore.case = FALSE,fixed = T)
+  A <- sub(" ","", A, ignore.case = FALSE,fixed = T) #Twice
+  A <- sub(" ","", A, ignore.case = FALSE,fixed = T) #Twice
+  assign("A",unique(A),envir = .GlobalEnv) 
+  A <- unique(A)
+  A
 }
 
 
@@ -89,27 +89,27 @@ Effect_coef <- function(x,y){
   }else Dir <- paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/FAGSYL/CLIMAP/Models/Negbin/",deparse(substitute(x)),"/")
   setwd(Dir)      
   s <- summary(x)
-        if(length(list.files(path=Dir,pattern=paste0("clim_effect_",deparse(substitute(x)),".RData")))==0){
-                clim.effect <- dfplot2[,c(A,"latitude")]
-        }else {clim.effect <- get(load(paste0("clim_effect_",deparse(substitute(x)),".RData")))}
-        # For any parameters 
-        B <- rownames(s$beta_table)
-        B <- grep(B,pattern = y,fixed=T,value=T,invert=F)
-        B <- grep(B,pattern = "Plotcat",fixed=T,value=T,invert=T) # To check remove the plotcat
-        # Here B is the list of the coefs names
-        C1 <- grep(B,pattern = ":",fixed=T,value=T,invert=T) # No interactions effects
-        C2 <- grep(B,pattern = ":",fixed=T,value=T,invert=F) # Interactions effects
-        C2 <- unlist(strsplit(C2, ":",fixed = T))
-        C2 <- grep(C2,pattern = y,fixed=T,value=T,invert=T) # interactions effects
-        
-        clim.effect[,paste0("effect_",y)] <- sum(s$beta_table[B[1:length(C1)],1]) # Ici on fait l'hypothèse que les coefs simple sont dans l'ordre avant les interactions. Je dois me débrouiller pour que ce soit vrai tout le temps  
-        if (length(C2)>0){ # If just single effect or interactions 
-        for (i in 1:length(C2)){
-                clim.effect[,paste0("effect_",y)] <- clim.effect[,paste0("effect_",y)] + s$beta_table[B[i+length(C1)],1]*clim.effect[,C2[i]]
-        }}
-        clim.effect <- as.data.frame(clim.effect)
-        save(clim.effect, file=paste0("clim_effect_",deparse(substitute(x)),".RData"))
-        print(clim.effect[1:10,]) # Check if I have all the columns I want 
+  if(length(list.files(path=Dir,pattern=paste0("clim_effect_",deparse(substitute(x)),".RData")))==0){
+    clim.effect <- dfplot2[,c(A,"latitude")]
+  }else {clim.effect <- get(load(paste0("clim_effect_",deparse(substitute(x)),".RData")))}
+  # For any parameters 
+  B <- rownames(s$beta_table)
+  B <- grep(B,pattern = y,fixed=T,value=T,invert=F)
+  B <- grep(B,pattern = "Plotcat",fixed=T,value=T,invert=T) # To check remove the plotcat
+  # Here B is the list of the coefs names
+  C1 <- grep(B,pattern = ":",fixed=T,value=T,invert=T) # No interactions effects
+  C2 <- grep(B,pattern = ":",fixed=T,value=T,invert=F) # Interactions effects
+  C2 <- unlist(strsplit(C2, ":",fixed = T))
+  C2 <- grep(C2,pattern = y,fixed=T,value=T,invert=T) # interactions effects
+  
+  clim.effect[,paste0("effect_",y)] <- sum(s$beta_table[B[1:length(C1)],1]) # Ici on fait l'hypothèse que les coefs simple sont dans l'ordre avant les interactions. Je dois me débrouiller pour que ce soit vrai tout le temps  
+  if (length(C2)>0){ # If just single effect or interactions 
+    for (i in 1:length(C2)){
+      clim.effect[,paste0("effect_",y)] <- clim.effect[,paste0("effect_",y)] + s$beta_table[B[i+length(C1)],1]*clim.effect[,C2[i]]
+    }}
+  clim.effect <- as.data.frame(clim.effect)
+  save(clim.effect, file=paste0("clim_effect_",deparse(substitute(x)),".RData"))
+  print(clim.effect[1:10,]) # Check if I have all the columns I want 
 }
 
 ### Summary by latitude of the effects I want and effects regroupement (competition,biotic, climate) ###
@@ -194,12 +194,14 @@ Effect_summary <- function(x,BioticPara="competition"){
   clim.effect$sumcum <- apply(cbind(abs(clim.effect[,EffectCum])), 1, sum) # Sum of competition and climate 
   
   for (i in 1:length(EffectCol)){
-    ind.clim.bio.abs.imp[,EffectCol[i]] <- abs(clim.effect[,EffectCol[i]])/clim.effect$max  # Importance compare to the max one tha was extracted
-    ind.clim.bio.rel.imp[,EffectCol[i]] <- abs(clim.effect[,EffectCol[i]])/clim.effect$sum  # Relative importance compare to the others (sum is qual to one)
+    ind.clim.bio.rel.imp[,EffectCol[i]] <- abs(clim.effect[,EffectCol[i]])/clim.effect$max  # Importance compare to the max one tha was extracted
+    #ind.clim.bio.rel.imp[,EffectCol[i]] <- abs(clim.effect[,EffectCol[i]])/clim.effect$sum  # Relative importance compare to the others (sum is qual to one)
+    ind.clim.bio.abs.imp[,EffectCol[i]] <- abs(clim.effect[,EffectCol[i]])  # Relative importance compare to the others (sum is qual to one)
   }
   for (i in 1:length(EffectCum)){
-    ind.clim.bio.abs.imp[,EffectCum[i]] <- abs(clim.effect[,EffectCum[i]])/clim.effect$maxcum  # Importance compare to the max one
-    ind.clim.bio.rel.imp[,EffectCum[i]] <- abs(clim.effect[,EffectCum[i]])/clim.effect$sumcum  # Relative importance compare to the others (sum is qual to one)
+    ind.clim.bio.rel.imp[,EffectCum[i]] <- abs(clim.effect[,EffectCum[i]])/clim.effect$maxcum  # Importance compare to the max one
+    #ind.clim.bio.rel.imp[,EffectCum[i]] <- abs(clim.effect[,EffectCum[i]])/clim.effect$sumcum  # Relative importance compare to the others (sum is qual to one)
+    ind.clim.bio.abs.imp[,EffectCum[i]] <- abs(clim.effect[,EffectCum[i]])  # Relative importance compare to the others (sum is qual to one)
   }
   ## Save these two files 
   save(ind.clim.bio.abs.imp, file="./ind_abs_imp_all_variables.RData") # Save these two files
@@ -269,7 +271,7 @@ Effect_summary <- function(x,BioticPara="competition"){
 }
 
 ### Representation on a plot of the parameters extracted 
-ggEffect <- function(x,y="REL",effect="sum"){
+ggEffect <- function(x,y="REL",effect="sum",band=T){
   if (y=="ABS"){clim.bio <- get(load(paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",
                                             CODE,"/CLIMAP/Models/binomial/",
                                             deparse(substitute(x)),"/clim_bio_abs_",
@@ -305,29 +307,30 @@ ggEffect <- function(x,y="REL",effect="sum"){
   # The plot theme 
   p<-ggplot(clim.bio) + 
     theme_bw()
-  if (y=="ABS"){p <- p + ylab("Predicted absolute importance")
-  }else if(y=='REL'){p <- p + ylab("Predicted relative importance")}
-    p <- p + scale_y_continuous(limits=c(-0.01,1)) +
-    theme(
-      plot.background = element_blank()
-      ,panel.grid.major = element_blank()
-      ,panel.grid.minor = element_blank()
-    ) +
-    theme(axis.text.x = element_text(size=15),
+  if (y=="ABS"){p <- p + ylab("Predicted absolute importance") +
+    scale_y_continuous(limits=c(-0.5,max(clim.bio$mean)))
+  }else if(y=='REL'){p <- p + ylab("Predicted relative importance") + 
+    scale_y_continuous(limits=c(-0.5,1))}
+  p <- p + theme(
+    plot.background = element_blank()
+    ,panel.grid.major = element_blank()
+    ,panel.grid.minor = element_blank()
+  ) +
+    theme(axis.text.x = element_text(size=11),
           text = element_text(face="bold"),#
           legend.background=element_rect(fill="white",colour="black",size=0.2),#
           panel.border = element_rect(colour = "black", fill=NA, size=0.8),#
           axis.line = element_line(colour="black"),#
-          plot.title = element_text(size=18,hjust = 0.5),#
+          plot.title = element_text(size=14,hjust = 0.5),#
           plot.caption = element_text(face="bold.italic"),#
-          axis.text.y = element_text(size=15),  
-          axis.title.x = element_text(size=20),
-          axis.title.y = element_text(size=20),
+          axis.text.y = element_text(size=11),  
+          axis.title.x = element_text(size=11),
+          axis.title.y = element_text(size=11),
           legend.position="bottom",
           legend.title=element_blank(),
           legend.key=element_blank(),
           legend.key.size = unit(5, 'lines'),
-          legend.text = element_text(size=14,face="bold"),
+          legend.text = element_text(size=11,face="bold"),
           legend.key.height=unit(2,"line"),
           legend.key.width=unit(5,"line")
     )
@@ -339,12 +342,13 @@ ggEffect <- function(x,y="REL",effect="sum"){
   if (effect=="indiv"){p <- p + scale_colour_manual(values=c(Mycol[1:length(EffectCol)]),labels=paste0("  ",EffectCol,"  "))
   } else if (effect=="sum"){p <- p + scale_colour_manual(values=c("darkorchid4","orange"),labels=paste0("  ",EffectCol,"  "))}
   
-  p <- p + geom_ribbon(data=clim.bio,aes(latitude, mean, ymin=lwr, ymax=upr, colour=variable, fill=variable),alpha=0.05, linetype=2)+
-    geom_rect(data=missing, aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax),colour="light grey", fill="white", inherit.aes=FALSE) +
-    geom_rect(xmin=min(clim.bio$latitude), xmax=max(clim.bio$latitude), ymin=-0.025, ymax=0,colour="black", fill="black")+
-    geom_rect(xmin=0,xmax=42.5,ymin=-Inf,ymax=-0.025,colour="black", fill="red",alpha=0.2)+
-    geom_rect(xmin=42.5,xmax=58,ymin=-Inf,ymax=-0.025,colour="black", fill="green",alpha=0.5)+
-    geom_rect(xmin=58,xmax=Inf,ymin=-Inf,ymax=-0.025,colour="black", fill="blue",alpha=0.8)+
+  if (band==T){p <- p + geom_ribbon(data=clim.bio,aes(latitude, mean, ymin=lwr, ymax=upr, colour=variable, fill=variable),alpha=0.05, linetype=2)
+  }else p <- p
+  p <- p + geom_rect(data=missing, aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax),colour="light grey", fill="white", inherit.aes=FALSE) +
+    geom_rect(xmin=min(clim.bio$latitude), xmax=max(clim.bio$latitude), ymin=-0.5, ymax=-0.2,colour="black", fill="black")+
+    geom_rect(xmin=0,xmax=42.5,ymin=-Inf,ymax=-0.5,colour="black", fill="red",alpha=0.2)+
+    geom_rect(xmin=42.5,xmax=58,ymin=-Inf,ymax=-0.5,colour="black", fill="green",alpha=0.5)+
+    geom_rect(xmin=58,xmax=Inf,ymin=-Inf,ymax=-0.5,colour="black", fill="blue",alpha=0.8)+
     geom_label(label = "Mediterranean", x=42.5, y=-0.01, size=3.5,vjust=2.2,label.padding = unit(0.15, "lines"),
                label.r = unit(0.15, "lines"),colour="white",fill="red",label.size = 0.2)+
     geom_label(label = "Temperate", x=50, y=-0.01, size=3.5,vjust=2.2,label.padding = unit(0.15, "lines"),
@@ -357,15 +361,9 @@ ggEffect <- function(x,y="REL",effect="sum"){
     geom_segment(x=42.5, y=-0.02, xend=42.5,yend=Inf, colour="light grey", size=0.1,linetype=2) +
     labs(caption="Changenet et al. 2018")
   print(p)
-  ggsave(filename = paste0(y,"_",effect,"_",CODE,"_",deparse(substitute(x)),".png"),plot = p, width = 7, height = 6, dpi=300) # Save 
+  if (band==T){ggsave(filename = paste0(y,"_",effect,"_",CODE,"_",deparse(substitute(x)),"_band.png"),plot = p, width = 12, height = 7, dpi=300) # Save 
+  }else ggsave(filename = paste0(y,"_",effect,"_",CODE,"_",deparse(substitute(x)),"_NO.band.png"),plot = p, width = 12, height = 7, dpi=300)
 }
-
-Mbin1FAGSYLspaMM <- get(load("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/FAGSYL/CLIMAP/Models/binomial/Mbin1FAGSYLspaMM/Mbin1FAGSYLspaMM.rda"))
-ExtracTest(Mbin1FAGSYLspaMM) # Me donne la liste des paramètres de mon modèles. 
-for (i in c("BAIj.plot.bis","BA.ha.plot.1","BAj.plot.1","treeNbr","bio1_climate_mean.30","bio14_climate_mean.30","min_spei12","mean_spei12")){
-  Effect_coef(Mbin1FAGSYLspaMM,i)}     # Para que l'on veut regarder  parmis ceux citer  
-Effect_summary(Mbin1FAGSYLspaMM,"competition") #
-ggEffect(Mbin1FAGSYLspaMM,'REL',"sum")
 
 
 
