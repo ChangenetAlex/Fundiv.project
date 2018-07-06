@@ -165,6 +165,6 @@ ModelBoot <- function(x,N = N,Ncat = Ncat,LvL = LvL, CAT = CAT, nBoot = nBoot,Yp
           plot.title = element_text(size=18,hjust = 0.5),
           plot.caption = element_text(face="bold.italic"))
   print(p1)
-  if (saveboot==T){ggsave(filename = paste0("GG_",deparse(substitute(x)),"_",seuil,"_",Variation,"_",VariationCAT,".png"),plot = p1, width = 6, height = 6, dpi=300)} # To modify 
+  if (saveboot==T){ggsave(filename = paste0("GG_",deparse(substitute(x)),"_",seuil,"_",Variation,"_",VariationCAT,".png"),plot = p1, width = 12.37, height = 7.04, dpi=150,units = "in")} # To modify 
   #Here is the final plot
 }

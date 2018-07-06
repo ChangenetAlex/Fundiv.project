@@ -61,6 +61,7 @@ panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
 
 # Dotchart
 Premodel <- function(z,Resp,Explain,size,save=F){
+  Name <- 
         if(all(list.dirs(Dir,full.names=F)!="Premodel")) dir.create(paste0(Dir,"/Premodel/"))
         A <- cbind(Resp,Explain[-c(length(Explain))])
   c1 <- rep(z[,c(Resp)],times=length(Explain))
@@ -92,7 +93,13 @@ Premodel <- function(z,Resp,Explain,size,save=F){
     pch = c(1:3))
   }
   dev.off()
-  if (save==T) jpeg(file=paste0(Dir,"/Premodel/",Resp,"_PairsPlot.jpeg"),width=710) # Save it 
+  if (save==T) jpeg(file=paste0(Dir,"/Premodel/",Resp,"_",deparse(substitute(z)),"_",Explain[1],"_Hist.jpeg"),width=710) # Save it 
+  par(mfrow=c(2,2))
+  for (i in 2:length(A)){
+    hist(z[,c(A[i])],breaks=40,xlab="Centered & normed Scale",ylab="Frequency",main="")
+  }
+  dev.off()
+  if (save==T) jpeg(file=paste0(Dir,"/Premodel/",Resp,"_",deparse(substitute(z)),"_",Explain[1],"_PairsPlot.jpeg"),width=710) # Save it 
   par(mfrow=c(1,1))
   pairs(z[,c(A)],panel = panel.smooth,upper.panel=panel.cor,diag.panel = panel.hist)
   dev.off()

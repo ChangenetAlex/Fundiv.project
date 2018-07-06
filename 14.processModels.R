@@ -66,7 +66,7 @@ CODE = "FAGSYL"
 
 # Load the df
 
-seuil = 0.80
+seuil = 0.70
 #Dir = c(paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models")) # Directory 
 Dir = (paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP")) # Directory 
 setwd(Dir)
@@ -74,6 +74,8 @@ list.files(Dir,pattern = paste0(seuil,".rds"))
 dfplot <- readRDS(paste0("dfplot",CODE,seuil,".rds")) #Base de données plot
 #dfplot2 <- readRDS(paste0("dfplot2",CODE,seuil,".rds")) #Base de données plot
 dfplot2 <- readRDS(paste0("dfplot2",CODE,seuil,".rds")) #Base de données plot
+dfplotbis <- readRDS(paste0("dfplotbis",CODE,seuil,".rds")) #Base de données plot
+
 dir.create(path=paste0(Dir,"/Models"))
 dir.create(path=paste0(Dir,"/Models/Negbin"))
 dir.create(path=paste0(Dir,"/Models/binomial"))
@@ -82,17 +84,76 @@ setwd(Dir)
 
 
 
-# Premodel
-Explain <- c(Explain,"min_spei12","mean_spei12")
-Explain <- Explain[c(1:5,7,8,6)]
+# Premodel analysis for 12 variables
+Explain <- c("bio1_climate_mean.30","bio14_climate_mean.30","min_spei12","mean_spei12",
+             "BA.ha.plot.1","BA.O.plot.1","BAj.plot.1","dbh.plot.mean","BAIj.plot.1.mean","BAIj.plot.1","treeNbr","yearsbetweensurveys","Plotcat")
+Explain <- Explain[c(10:12,13)]
 Resp <- c("sp.mort.bin")
-Premodel(z=dfplot2,Resp=Resp,Explain=Explain,size=4,save=T)
+#Resp <- c("sp.mortality.plot.count.yr")
+Explain <- c("bio1_climate_mean.30","bio14_climate_mean.30","min_spei12","mean_spei12",
+             "BA.ha.plot.1","BA.O.plot.1","BAj.plot.1","dbh.plot.mean","BAIj.plot.1.mean","BAIj.plot.1","treeNbr","yearsbetweensurveys","Plotcat")
+Premodel(z=dfplotbis,Resp=Resp,Explain=Explain,size=7,save=T) # Obtain the global VIF for all variable 
+for (i in 1:4){
+  Explain <- c("BA.ha.plot.1","BA.O.plot.1","BAj.plot.1","dbh.plot.mean","BAIj.plot.1.mean","BAIj.plot.1",
+               "logBA.ha.plot.1","logBA.O.plot.1","logBAj.plot.1","logdbh.plot.mean","logBAIj.plot.1.mean","logBAIj.plot.1",
+               "sqrtBA.ha.plot.1","sqrtBA.O.plot.1","sqrtBAj.plot.1","sqrtdbh.plot.mean","sqrtBAIj.plot.1.mean","sqrtBAIj.plot.1",
+               "treeNbr","yearsbetweensurveys","Plotcat","bio1_climate_mean.30","bio14_climate_mean.30","min_spei12","mean_spei12")
+  Explain <- Explain[c((3*i-2):(3*i),13)]
+  Premodel(z=dfplotbis,Resp=Resp,Explain=Explain,size=5,save=T) #
+  Premodel(z=dfplot2,Resp=Resp,Explain=Explain,size=5,save=T)   # Apply the functiçon on both database on all trasnformed and no trasnformed data
+} 
+  
+
+
+
 Dir =c(paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models/binomial"))
 setwd(Dir)
 
-## Transfo variables 
-dfplot2$logbio1_climate_mean.30 <- log(dfplot2$bio1_climate_mean.30 + 5)
-dfplot2$logbio14_climate_mean.30 <- log(dfplot2$bio14_climate_mean.30 + 5)
+
+hist(dfplotbis$BA.ha.plot.1,breaks=100)
+hist(dfplotbis$logBA.ha.plot.1,breaks=100)
+hist(dfplotbis$sqrtBA.ha.plot.1,breaks=100)
+hist(dfplot2$BA.ha.plot.1,breaks=100)
+hist(dfplot2$logBA.ha.plot.1,breaks=100)
+hist(dfplot2$sqrtBA.ha.plot.1,breaks=100) # To test 
+
+hist(dfplotbis$BA.O.plot.1,breaks=100)
+hist(dfplotbis$logBA.O.plot.1,breaks=100)
+hist(dfplotbis$sqrtBA.O.plot.1,breaks=100)
+hist(dfplot2$BA.O.plot.1,breaks=30)
+hist(dfplot2$logBA.O.plot.1,breaks=30)
+hist(dfplot2$sqrtBA.O.plot.1,breaks=30) # Mieux mais zero inflated 
+
+hist(dfplotbis$BAj.plot.1,breaks=50)
+hist(dfplotbis$logBAj.plot.1,breaks=50)
+hist(dfplotbis$sqrtBAj.plot.1,breaks=50)
+hist(dfplot2$BAj.plot.1,breaks=50)
+hist(dfplot2$logBAj.plot.1,breaks=100) # Mieux mais zero inflated
+hist(dfplot2$sqrtBAj.plot.1,breaks=100)
+
+
+hist(dfplotbis$BAIj.plot.1.mean,breaks=50)
+hist(dfplotbis$logBAIj.plot.1.mean,breaks=50)
+hist(dfplotbis$sqrtBAIj.plot.1.mean,breaks=50)
+hist(dfplot2$BAIj.plot.1.mean,breaks=50)
+hist(dfplot2$logBAIj.plot.1.mean,breaks=50)
+hist(dfplot2$sqrtBAIj.plot.1.mean,breaks=50)  ## Best 
+
+
+hist(dfplotbis$BAIj.plot.1,breaks=50)
+hist(dfplotbis$logBAIj.plot.1,breaks=50)
+hist(dfplotbis$sqrtBAIj.plot.1,breaks=50)
+hist(dfplot2$BAIj.plot.1,breaks=50)
+hist(dfplot2$logBAIj.plot.1,breaks=50)
+hist(dfplot2$sqrtBAIj.plot.1,breaks=50) # Best 
+
+
+hist(dfplotbis$dbh.plot.mean,breaks=50)
+hist(dfplotbis$logdbh.plot.mean,breaks=50)
+hist(dfplotbis$sqrtdbh.plot.mean,breaks=50)
+hist(dfplot2$dbh.plot.mean,breaks=50)
+hist(dfplot2$logdbh.plot.mean,breaks=30) # Best 
+hist(dfplot2$sqrtdbh.plot.mean,breaks=30)
 
 # Models 
 Mbin1FAGSYL <- fitme(sp.mort.bin ~ treeNbr + yearsbetweensurveys + min_spei01 + mean_spei01 + min_spei06 + mean_spei06 + min_spei12 + mean_spei12 + min_spei24 + mean_spei24 + min_spei48 + mean_spei48 + BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + logbio1 + bio14_climate_mean.30 + logbio14 + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BA.ha.plot.1:bio1_climate_mean.30 + BA.ha.plot.1:logbio1 + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:logbio1 + BA.ha.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:logbio14 + BAj.plot.1:bio14_climate_mean.30 + BAj.plot.1:logbio14 + BA.ha.plot.1:BAj.plot.1 + bio1_climate_mean.30:bio14_climate_mean.30 + logbio1:logbio14 + BA.ha.plot.1:Plotcat + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + Plotcat:logbio1 + Plotcat:logbio14 + (1|country), data=dfplot2,family = binomial(),method='REML')
@@ -109,17 +170,17 @@ Mbin80EtestOffsetPINSYL <- fitme(sp.mort.bin ~ BAIj.plot.bis + treeNbr +  offset
 list.dirs(getwd())
 setwd(list.dirs(getwd())[2]) # Chose the model file
 list.files()
-Mbin80EtestOffset <- get(load(file = "Mbin80EtestOffset.rda")) 
+Mbin31 <- get(load(file = "Mbin31.rda")) 
 rm("x")
 
 
 # Process the models : bootstrap and coefficient, saving etc 
 Saving(Mbin3FAGSYLspaMM) # Evaluation of the model 
-Extraction(Mbin3FAGSYLspaMM)
+Extraction(Mbin31)
 ModelBoot(Mbin3FAGSYLspaMM,4,12,LvL=30,CAT=CAT,nBoot=10,Yportion = 0.80,saveboot=T,nCoeur=10)
 Diagnostic(Mbin3FAGSYLspaMM,0.66,F)
-ExtracTest(Mbin3FAGSYLspaMM) # Me donne la liste des paramètres de mon modèles. 
-for (i in c("BAIj.plot.bis","BA.ha.plot.1","BAj.plot.1","treeNbr","bio1_climate_mean.30","bio14_climate_mean.30","min_spei12","mean_spei12")){
-  Effect_coef(Mbin3FAGSYLspaMM,i)}     # Para que l'on veut regarder  parmis ceux citer  
-Effect_summary(Mbin3FAGSYLspaMM,"competition") #
-ggEffect(Mbin3FAGSYLspaMM,'ABS',"indiv",band=T)
+ExtracTest(Mbin31) # Me donne la liste des paramètres de mon modèles. 
+for (i in c("BAIj.plot.1","BAIj.plot.1.mean","dbh.plot.mean","BA.ha.plot.1","BAj.plot.1","treeNbr","bio1_climate_mean.30","bio12_climate_mean.30","min_spei12","mean_spei12")){
+  Effect_coef(Mbin31,i)}     # Para que l'on veut regarder  parmis ceux citer  
+Effect_summary(Mbin31,"competition") #
+ggEffect(Mbin31,'ABS',"indiv",band=T)

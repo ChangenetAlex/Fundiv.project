@@ -67,6 +67,7 @@ ExtracTest <- function(x){
   A <- grep(A,pattern = "|",fixed=T,value=T,invert=T)
   A <- grep(A,pattern = ":",fixed=T,value=T,invert=T)
   A <- grep(A,pattern = "e)",fixed=T,value=T,invert=T) #Remove the AC term which remains
+  A <- grep(A,pattern = "^[ ]$",value=T,invert=T) #Remove empty characters
   A <- sub("I(","", A, ignore.case = FALSE,fixed = T)
   A <- sub("^2)","", A, ignore.case = FALSE,fixed = T)
   A <- sub("offset(log(","", A, ignore.case = FALSE,fixed = T)
@@ -157,7 +158,7 @@ Effect_summary <- function(x,BioticPara="competition"){
   ############                                                                                                                #
   ## Biotic ##      ##  'BA' terms and the number of trees (if an effect was calculated for them)n + BAI                      #
   ############                                                                                                                #
-  if (BioticPara != "competition") {Var.biotic <- grep(Var,pattern = paste(c("BA","tree"),collapse="|"),value=T,invert=F)     #                                    #
+  if (BioticPara != "competition") {Var.biotic <- grep(Var,pattern = paste(c("BA","tree","dbh"),collapse="|"),value=T,invert=F)     #                                    #
   #################                                                                                                           #
   ## Competition ##    # Same as Biotic But the BAI is removed since it is a growth param                                     #
   #################                                                                                                           #
@@ -302,15 +303,16 @@ ggEffect <- function(x,y="REL",effect="sum",band=T){
       }} else i=i+1
   }
   
-  Mycol <- c("red","dark green", "dodgerblue3","orange","yellow","gray","black","green") #### The colors that I will use 
+  Mycol <- c("red","dark green", "dodgerblue3","orange","yellow","gray","black","green","lightblue","gray20") #### The colors that I will use 
+  Myline <- c(1,3,6,1,3,6,1,3,6,1,3,6)
   
   # The plot theme 
   p<-ggplot(clim.bio) + 
     theme_bw()
   if (y=="ABS"){p <- p + ylab("Predicted absolute importance") +
-    scale_y_continuous(limits=c(-0.5,max(clim.bio$mean)))
+    scale_y_continuous(limits=c(-0.2,max(clim.bio$mean)))
   }else if(y=='REL'){p <- p + ylab("Predicted relative importance") + 
-    scale_y_continuous(limits=c(-0.5,1))}
+    scale_y_continuous(limits=c(-0.2,1))}
   p <- p + theme(
     plot.background = element_blank()
     ,panel.grid.major = element_blank()
@@ -336,35 +338,36 @@ ggEffect <- function(x,y="REL",effect="sum",band=T){
     )
   # The plot 
   par(mar=c(0, 0, 0, 0), xaxs = "i", yaxs = "i")
-  p <- p + geom_line(aes(latitude, mean, colour = as.character(variable)), size=0.8) +
-    guides(linetype=FALSE, fill=FALSE) +
+  p <- p + geom_line(aes(latitude, mean, colour = as.character(variable), linetype=as.character(variable)), size=0.8)+
+    guides(fill=FALSE) +
     guides(col=guide_legend(ncol=3, byrow=F))
-  if (effect=="indiv"){p <- p + scale_colour_manual(values=c(Mycol[1:length(EffectCol)]),labels=paste0("  ",EffectCol,"  "))
+  if (effect=="indiv"){p <- p + scale_colour_manual(values=c(Mycol[1:length(EffectCol)]),labels=paste0("  ",EffectCol,"  ")) +
+    scale_linetype_manual(values=c(Myline[1:length(EffectCol)]),labels=paste0("  ",EffectCol,"  "))
   } else if (effect=="sum"){p <- p + scale_colour_manual(values=c("darkorchid4","orange"),labels=paste0("  ",EffectCol,"  "))}
   
   if (band==T){p <- p + geom_ribbon(data=clim.bio,aes(latitude, mean, ymin=lwr, ymax=upr, colour=variable, fill=variable),alpha=0.05, linetype=2)
   }else p <- p
   p <- p + geom_rect(data=missing, aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax),colour="light grey", fill="white", inherit.aes=FALSE) +
-    geom_rect(xmin=min(clim.bio$latitude), xmax=max(clim.bio$latitude), ymin=-0.5, ymax=-0.2,colour="black", fill="black")+
-    geom_rect(xmin=0,xmax=42.5,ymin=-Inf,ymax=-0.5,colour="black", fill="red",alpha=0.2)+
-    geom_rect(xmin=42.5,xmax=58,ymin=-Inf,ymax=-0.5,colour="black", fill="green",alpha=0.5)+
-    geom_rect(xmin=58,xmax=Inf,ymin=-Inf,ymax=-0.5,colour="black", fill="blue",alpha=0.8)+
+    geom_rect(xmin=min(clim.bio$latitude), xmax=max(clim.bio$latitude), ymin=-0.10, ymax=-0.05,colour="black", fill="black")+
+    geom_rect(xmin=0,xmax=42.5,ymin=-Inf,ymax=-0.1,colour="black", fill="red",alpha=0.2)+
+    geom_rect(xmin=42.5,xmax=58,ymin=-Inf,ymax=-0.1,colour="black", fill="green",alpha=0.5)+
+    geom_rect(xmin=58,xmax=Inf,ymin=-Inf,ymax=-0.1,colour="black", fill="blue",alpha=0.8)+
     geom_label(label = "Mediterranean", x=42.5, y=-0.01, size=3.5,vjust=2.2,label.padding = unit(0.15, "lines"),
                label.r = unit(0.15, "lines"),colour="white",fill="red",label.size = 0.2)+
     geom_label(label = "Temperate", x=50, y=-0.01, size=3.5,vjust=2.2,label.padding = unit(0.15, "lines"),
                label.r = unit(0.15, "lines"),colour="white",fill="darkgreen",label.size = 0.2)+
     geom_label(label = "Boreal", x=58, y=-0.01, size=3.5,vjust=2.2,label.padding = unit(0.15, "lines"),
                label.r = unit(0.15, "lines"),colour="white",fill="blue",label.size = 0.2)+
-    geom_segment(x=min(clim.bio$latitude), y=-0.02, xend=min(clim.bio$latitude), yend=Inf, colour="black", size=0.1,linetype=11) +
-    geom_segment(x=max(clim.bio$latitude), y=-0.02, xend=max(clim.bio$latitude), yend=Inf, colour="black", size=0.1,linetype=11) +
-    geom_segment(x=58, y=-0.02, xend=58, yend=Inf, colour="light grey", size=0.1,linetype=2) +
-    geom_segment(x=42.5, y=-0.02, xend=42.5,yend=Inf, colour="light grey", size=0.1,linetype=2) +
+    geom_segment(x=min(clim.bio$latitude), y=-0.1, xend=min(clim.bio$latitude), yend=Inf, colour="black", size=0.1,linetype=11) +
+    geom_segment(x=max(clim.bio$latitude), y=-0.1, xend=max(clim.bio$latitude), yend=Inf, colour="black", size=0.1,linetype=11) +
+    geom_segment(x=58, y=-0.1, xend=58, yend=Inf, colour="light grey", size=0.1,linetype=2) +
+    geom_segment(x=42.5, y=-0.1, xend=42.5,yend=Inf, colour="light grey", size=0.1,linetype=2) +
     labs(caption="Changenet et al. 2018")
   print(p)
-  if (band==T){ggsave(filename = paste0(y,"_",effect,"_",CODE,"_",deparse(substitute(x)),"_band.png"),plot = p, width = 12, height = 7, dpi=300) # Save 
-  }else ggsave(filename = paste0(y,"_",effect,"_",CODE,"_",deparse(substitute(x)),"_NO.band.png"),plot = p, width = 12, height = 7, dpi=300)
+  if (band==T){ggsave(filename = paste0(y,"_",effect,"_",CODE,"_",deparse(substitute(x)),"_band.png"),plot = p, width = 12.37, height = 7.04, dpi=150,units = "in") # Save 
+  }else ggsave(filename = paste0(y,"_",effect,"_",CODE,"_",deparse(substitute(x)),"_NO.band.png"),plot = p, width = 12.37, height = 7.04, dpi=150,units = "in")
 }
 
-
+# width = 12.37, height = 7.04, dpi=150,units = "in"
 
 

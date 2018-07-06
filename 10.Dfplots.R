@@ -4,7 +4,8 @@
 SavingInfo = "MyDFs(dir='bureau' or 'home',
 CODE = 'BETPEN',
 seuil = 0.8
-seuilC = 0.6)"
+seuilC = 0.6)
+This function extract plot data in three tables (one with management, one scaled and one non scaled. Mortality binary data are added, as well as SPEI indexes that were calculated previously"
 bannerBreak = "\n*********************************************************************\n"
 cat(paste0(bannerBreak,SavingInfo,bannerBreak,"\n"))
 
@@ -21,32 +22,41 @@ MyDFs <- function(dir="bureau",
   Dir = c(paste0(Dir, "our-data/species/", CODE, "/CLIMAP"))
   setwd(Dir)
   list.files(Dir, pattern = paste0(".rds"))
-  df <-
-    readRDS(paste0("Mydf_", CODE, "_", seuil, "_", seuilC, ".rds")) #Base de données plot full
+  df <- readRDS(paste0("Mydf2_", CODE, "_", seuil, "_", seuilC, ".rds")) #Base de données plot full
   ###################################################################
   ###                                                             ###
   ###   Here is the df (scaled plots but some are managed)        ###
   ###                                                             ###
   ###################################################################
   
-  dfplot <-
-    df[!duplicated(df$plotcode), -c(5:7, 12:27)] # Keep unique plot codes
+  dfplot <-df[!duplicated(df$plotcode), -c(5:7, 12:27)] # Keep unique plot codes
   saveRDS(get("dfplot"), paste0(Dir, "/dfplot", CODE, seuil, ".rds")) # Work at the plot scale
+  
+  # Delete particular cases (100% recruitment by sp that result in NA for BA.ha.plot)
+  # And put BAj to 0 instead of NA for plots whose mortality is 100%
+  # Then recalculate the BA.O.plot.1
+  
+                              ############################
+  ############################# Added on the 01/07/2018  ########################################
+  dfplot <- dfplot[which(!is.na(dfplot$BA.ha.plot.1) | dfplot$sp.recruitment.plot.rate!=1),]   ##
+  dfplot[which(is.na(dfplot$BAj.plot.1) & dfplot$sp.mortality.plot.rate==1),"BAj.plot.1"] <- 0 ##
+  dfplot$BA.O.plot.1 <- dfplot$BA.ha.plot.1-dfplot$BAj.plot.1                                  ##
+  ###############################################################################################
   
   # Mortality rate as a binomial (not really useful)
   dfplot$mort.bin <- dfplot[, "mortality.plot.rate"]
   dfplot[!is.na(dfplot$mortality.plot.rate) &
-           dfplot$mortality.plot.rate != 0, 312] = 1
+           dfplot$mortality.plot.rate != 0, 318] = 1
   dfplot[!is.na(dfplot$mortality.plot.rate) &
-           dfplot$mortality.plot.rate == 0, 312] = 0
-  dfplot[, 312] = as.numeric(dfplot[, 312])
+           dfplot$mortality.plot.rate == 0, 318] = 0
+  dfplot[, 318] = as.numeric(dfplot[, 318])
   #  Sp Mortality rate as a binomial # Added on the 17/05/2018
   dfplot$sp.mort.bin <- dfplot[, "sp.mortality.plot.rate"]
   dfplot[!is.na(dfplot$sp.mortality.plot.rate) &
-           dfplot$sp.mortality.plot.rate != 0, 313] = 1
+           dfplot$sp.mortality.plot.rate != 0, 319] = 1
   dfplot[!is.na(dfplot$sp.mortality.plot.rate) &
-           dfplot$sp.mortality.plot.rate == 0, 313] = 0
-  dfplot[, 313] = as.numeric(dfplot[, 313])
+           dfplot$sp.mortality.plot.rate == 0, 319] = 0
+  dfplot[, 319] = as.numeric(dfplot[, 319])
   
   
   # Divide by the number of years (perthousand unit)
@@ -87,15 +97,24 @@ MyDFs <- function(dir="bureau",
   dfplot <-
     readRDS(paste0("dfplot", CODE, seuil, ".rds")) #Base de données plot full
   # Scale (based on all available data)
-  dfplot[, c(10:17, 38:43, 47:50, 60:311)] <-
-    scale(dfplot[, c(10:17, 38:43, 47:50, 60:311)], center = TRUE, scale =
-            TRUE) #Center and reduced ALL
-  dfplot2 <-
-    dfplot[!is.na(dfplot$Plotcat) &
-             dfplot$Plotcat != 10, ] # Unique plots that falls within the species distribution area remove NA and transition zone
-  dfplot2$Plotcat <- as.factor(dfplot2$Plotcat)
-  dfplot2 <-
-    dfplot2[!is.na(dfplot2$sp.mortality.plot.count.yr), ] # Remove 2 NA or 14 (sp.count) and remove all french data (no years)
+  
+  ####### Added 05/07 # No scaled data but without NA and trasnfo ! ! ############
+                                                                                ##
+  dfplot <-dfplot[!is.na(dfplot$Plotcat) & dfplot$Plotcat != 10, ]              ## Unique plots that falls within the species distribution area remove NA and transition zone
+  dfplot$Plotcat <- as.factor(dfplot$Plotcat)                                   ##
+  dfplot <-dfplot[!is.na(dfplot$sp.mortality.plot.count.yr), ]                  ## Remove 2 NA or 14 (sp.count) and remove all french data (no years)
+  Transfo <- c("BA.ha.plot.1","BA.O.plot.1","BAj.plot.1",                       ##
+               "dbh.plot.mean","BAIj.plot.1.mean","BAIj.plot.1")                ## Variable to transform 
+  for (i in 1:length(Transfo)){                                                 ##
+    dfplot[,paste0("log",Transfo[i])] <- log(dfplot[,Transfo[i]]+1)               ## Log transfo
+    dfplot[,paste0("sqrt",Transfo[i])] <- sqrt(dfplot[,Transfo[i]])}            ## Sqrt transfo 
+  saveRDS(get("dfplot"), paste0(Dir, "/dfplotbis", CODE, seuil, ".rds"))        ## Save this database as Dfplot normal 
+                                                                                ##
+  ################################################################################
+  
+  dfplot[, c(10:17, 38:43, 47:50, 60:317,338:(337+2*length(Transfo)))] <-scale(dfplot[, c(10:17, 38:43, 47:50, 60:317,338:(337+2*length(Transfo)))]
+                                                                               , center = TRUE, scale =TRUE) #Center and reduced ALL
+  dfplot2 <- dfplot
   #summary(as.factor(dfplot2[dfplot2$sp.mortality.plot.rate.yr==0,"Plotcat"])) #(763,1284,70)
   #summary(as.factor(dfplot2[dfplot2$sp.mortality.plot.rate.yr>0,"Plotcat"])) #(763,1284,70)
   capture.output(print(summary(as.factor(dfplot2[dfplot2$sp.mortality.plot.rate.yr ==
