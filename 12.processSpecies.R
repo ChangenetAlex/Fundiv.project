@@ -145,3 +145,4 @@ close(Errors.files)
 CODE = "FAGSYL"
 seuil = 0.7
 
+Saving(Mbin1)

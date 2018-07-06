@@ -75,33 +75,30 @@ dfplot <- readRDS(paste0("dfplot",CODE,seuil,".rds")) #Base de données plot
 #dfplot2 <- readRDS(paste0("dfplot2",CODE,seuil,".rds")) #Base de données plot
 dfplot2 <- readRDS(paste0("dfplot2",CODE,seuil,".rds")) #Base de données plot
 dfplotbis <- readRDS(paste0("dfplotbis",CODE,seuil,".rds")) #Base de données plot
-
-dir.create(path=paste0(Dir,"/Models"))
-dir.create(path=paste0(Dir,"/Models/Negbin"))
-dir.create(path=paste0(Dir,"/Models/binomial"))
+#dir.create(path=paste0(Dir,"/Models"))
+#dir.create(path=paste0(Dir,"/Models/Negbin"))
+#dir.create(path=paste0(Dir,"/Models/binomial"))
 Dir =c(paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models"))
 setwd(Dir)
 
 
 
-# Premodel analysis for 12 variables
-Explain <- c("bio1_climate_mean.30","bio14_climate_mean.30","min_spei12","mean_spei12",
-             "BA.ha.plot.1","BA.O.plot.1","BAj.plot.1","dbh.plot.mean","BAIj.plot.1.mean","BAIj.plot.1","treeNbr","yearsbetweensurveys","Plotcat")
-Explain <- Explain[c(10:12,13)]
-Resp <- c("sp.mort.bin")
-#Resp <- c("sp.mortality.plot.count.yr")
-Explain <- c("bio1_climate_mean.30","bio14_climate_mean.30","min_spei12","mean_spei12",
-             "BA.ha.plot.1","BA.O.plot.1","BAj.plot.1","dbh.plot.mean","BAIj.plot.1.mean","BAIj.plot.1","treeNbr","yearsbetweensurveys","Plotcat")
-Premodel(z=dfplotbis,Resp=Resp,Explain=Explain,size=7,save=T) # Obtain the global VIF for all variable 
-for (i in 1:4){
+# Perform the anaysis on all variable three by three 
+for (i in 1:((length(Explain)-1)/3)){
   Explain <- c("BA.ha.plot.1","BA.O.plot.1","BAj.plot.1","dbh.plot.mean","BAIj.plot.1.mean","BAIj.plot.1",
                "logBA.ha.plot.1","logBA.O.plot.1","logBAj.plot.1","logdbh.plot.mean","logBAIj.plot.1.mean","logBAIj.plot.1",
                "sqrtBA.ha.plot.1","sqrtBA.O.plot.1","sqrtBAj.plot.1","sqrtdbh.plot.mean","sqrtBAIj.plot.1.mean","sqrtBAIj.plot.1",
-               "treeNbr","yearsbetweensurveys","Plotcat","bio1_climate_mean.30","bio14_climate_mean.30","min_spei12","mean_spei12")
-  Explain <- Explain[c((3*i-2):(3*i),13)]
+               "treeNbr","yearsbetweensurveys","bio1_climate_mean.30","bio14_climate_mean.30","min_spei12","mean_spei12","Plotcat")
+  Explain <- Explain[c((3*i-2):(3*i),length(Explain))]
   Premodel(z=dfplotbis,Resp=Resp,Explain=Explain,size=5,save=T) #
   Premodel(z=dfplot2,Resp=Resp,Explain=Explain,size=5,save=T)   # Apply the functiçon on both database on all trasnformed and no trasnformed data
 } 
+# Premodel analysis for 12 variables and to obtain the global VIF indices
+Explain <- c("bio1_climate_mean.30","bio14_climate_mean.30","min_spei12","mean_spei12",
+             "BA.ha.plot.1","BA.O.plot.1","BAj.plot.1","dbh.plot.mean","BAIj.plot.1.mean","BAIj.plot.1","treeNbr","yearsbetweensurveys","Plotcat")
+Resp <- c("sp.mort.bin")
+#Resp <- c("sp.mortality.plot.count.yr")
+Premodel(z=dfplot2,Resp=Resp,Explain=Explain,size=3,save=T) # Obtain the global VIF for all variable (not transformed)
   
 
 

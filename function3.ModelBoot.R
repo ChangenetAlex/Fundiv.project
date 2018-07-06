@@ -123,7 +123,9 @@ ModelBoot <- function(x,N = N,Ncat = Ncat,LvL = LvL, CAT = CAT, nBoot = nBoot,Yp
   Means_Bootpred2 = rowMeans(Bootpred2) # mean of each row
   SD_Bootpred2 = apply(Bootpred2, 1, sd) # sd of each column
   
-  # Retrieve original variation
+  # Retrieve original variation AND if log ou sqrt revenir a la vrai ...
+  A <- grep(A,pattern = "e)",fixed=T,value=T,invert=T) #Remove the AC term which remains
+  A <- sub("I(","", A, ignore.case = FALSE,fixed = T)
   original_Variation=myDF[1:LvL,Variation]*sd(dfplot[,Variation],na.rm=T)+mean(dfplot[,Variation],na.rm=T) #From myDF data to real values based on dfplot
   
   # Create a longformat DF with the original variation parameter as well
