@@ -44,10 +44,12 @@ Extraction <- function(x){
   A <- grep(A,pattern = "|",fixed=T,value=T,invert=T)
   A <- grep(A,pattern = ":",fixed=T,value=T,invert=T)
   A <- grep(A,pattern = "e)",fixed=T,value=T,invert=T) #Remove the AC term which remains
+  A <- grep(A,pattern = "^[ ]$",value=T,invert=T) #Remove empty characters
   A <- sub("I(","", A, ignore.case = FALSE,fixed = T)
   A <- sub("^2)","", A, ignore.case = FALSE,fixed = T)
   A <- sub("offset(log(","", A, ignore.case = FALSE,fixed = T)
   A <- sub("))","", A, ignore.case = FALSE,fixed = T)
+  A <- sub("\n ","", A, ignore.case = FALSE,fixed = T) # New line
   A <- sub(" ","", A, ignore.case = FALSE,fixed = T)
   A <- sub(" ","", A, ignore.case = FALSE,fixed = T) #Twice
   A <- unique(A)
@@ -123,10 +125,11 @@ ModelBoot <- function(x,N = N,Ncat = Ncat,LvL = LvL, CAT = CAT, nBoot = nBoot,Yp
   Means_Bootpred2 = rowMeans(Bootpred2) # mean of each row
   SD_Bootpred2 = apply(Bootpred2, 1, sd) # sd of each column
   
-  # Retrieve original variation AND if log ou sqrt revenir a la vrai ...
-  A <- grep(A,pattern = "e)",fixed=T,value=T,invert=T) #Remove the AC term which remains
-  A <- sub("I(","", A, ignore.case = FALSE,fixed = T)
+  # Retrieve original variation AND if log ou sqrt redefine the column to go 
+  if (grepl(Variation,pattern = "sqrt",fixed=T)==T){Variation <- sub("sqrt","", Variation, ignore.case = FALSE,fixed = T)
+  }else if (grepl(Variation,pattern = "log",fixed=T)==T) Variation <- sub("log","", Variation, ignore.case = FALSE,fixed = T)
   original_Variation=myDF[1:LvL,Variation]*sd(dfplot[,Variation],na.rm=T)+mean(dfplot[,Variation],na.rm=T) #From myDF data to real values based on dfplot
+
   
   # Create a longformat DF with the original variation parameter as well
   testDF <- data.frame(Means_Bootpred0,Means_Bootpred1,Means_Bootpred2,original_Variation)

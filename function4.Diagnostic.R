@@ -28,7 +28,7 @@ library(dplyr)
 library(arm)
 
 ## The function 
-
+x <- M2bin15B
 Diagnostic <- function(x,Yportion,AllInOne=T){
         
         # Extract the response and the explicative variable 
@@ -39,10 +39,12 @@ Diagnostic <- function(x,Yportion,AllInOne=T){
         ExplVar <- grep(ExplVar,pattern = "|",fixed=T,value=T,invert=T)
         ExplVar <- grep(ExplVar,pattern = ":",fixed=T,value=T,invert=T)
         ExplVar <- grep(ExplVar,pattern = "e)",fixed=T,value=T,invert=T) #Remove the AC term which remains
+        ExplVar <- grep(ExplVar,pattern = "^[ ]$",value=T,invert=T) #Remove empty characters
         ExplVar <- sub("I(","", ExplVar, ignore.case = FALSE,fixed = T)
         ExplVar <- sub("^2)","", ExplVar, ignore.case = FALSE,fixed = T)
         ExplVar <- sub("offset(log(","", ExplVar, ignore.case = FALSE,fixed = T)
         ExplVar <- sub("))","", ExplVar, ignore.case = FALSE,fixed = T)
+        ExplVar <- sub("\n ","", ExplVar, ignore.case = FALSE,fixed = T) # New line
         ExplVar <- sub(" ","", ExplVar, ignore.case = FALSE,fixed = T)
         ExplVar <- sub(" ","", ExplVar, ignore.case = FALSE,fixed = T) #Twice
         ExplVar <- unique(ExplVar)

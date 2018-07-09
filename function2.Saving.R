@@ -29,8 +29,8 @@ library(ggplot2)
 
 Saving <- function(x){
   if (x$family$family=="binomial"){
-    Dir <- paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/FAGSYL/CLIMAP/Models/binomial")
-  }else Dir <- paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/FAGSYL/CLIMAP/Models/Negbin")
+    Dir <- paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models/binomial")
+  }else Dir <- paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models/Negbin")
   dir.create(paste0(Dir,"/",deparse(substitute(x)),"/"))
   save(x, file = paste0(Dir,"/",deparse(substitute(x)),"/",deparse(substitute(x)),".rda")) # save the model as an RDA file 
   

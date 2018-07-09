@@ -105,52 +105,28 @@ Premodel(z=dfplot2,Resp=Resp,Explain=Explain,size=3,save=T) # Obtain the global 
 
 Dir =c(paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models/binomial"))
 setwd(Dir)
+### Load preexisting models 
+list.dirs(getwd())
+setwd(list.dirs(getwd())[18]) # Chose the model file
+list.files()
+M2bin15B <- get(load(file = "M2bin15B.rda")) 
+rm("x")
+
+# Process the models : bootstrap and coefficient, saving etc 
+Saving(Mbin3FAGSYLspaMM) # Evaluation of the model 
+Extraction(M2bin15B)
+ModelBoot(M2bin15B,7,12,LvL=30,CAT=CAT,nBoot=10,Yportion = 0.66,saveboot=T,nCoeur=10)
+Diagnostic(Mbin3FAGSYLspaMM,0.66,F)
+ExtracTest(M2bin15B) # Me donne la liste des paramètres de mon modèles. 
+for (i in c("BAIj.plot.1","BAIj.plot.1.mean","dbh.plot.mean","BA.ha.plot.1","BAj.plot.1","treeNbr","bio1_climate_mean.30","bio12_climate_mean.30","min_spei12","mean_spei12")){
+  Effect_coef(Mbin31,i)}     # Para que l'on veut regarder  parmis ceux citer  
+Effect_summary(Mbin31,"competition") #
+ggEffect(Mbin31,'ABS',"indiv",band=T)
 
 
-hist(dfplotbis$BA.ha.plot.1,breaks=100)
-hist(dfplotbis$logBA.ha.plot.1,breaks=100)
-hist(dfplotbis$sqrtBA.ha.plot.1,breaks=100)
-hist(dfplot2$BA.ha.plot.1,breaks=100)
-hist(dfplot2$logBA.ha.plot.1,breaks=100)
-hist(dfplot2$sqrtBA.ha.plot.1,breaks=100) # To test 
-
-hist(dfplotbis$BA.O.plot.1,breaks=100)
-hist(dfplotbis$logBA.O.plot.1,breaks=100)
-hist(dfplotbis$sqrtBA.O.plot.1,breaks=100)
-hist(dfplot2$BA.O.plot.1,breaks=30)
-hist(dfplot2$logBA.O.plot.1,breaks=30)
-hist(dfplot2$sqrtBA.O.plot.1,breaks=30) # Mieux mais zero inflated 
-
-hist(dfplotbis$BAj.plot.1,breaks=50)
-hist(dfplotbis$logBAj.plot.1,breaks=50)
-hist(dfplotbis$sqrtBAj.plot.1,breaks=50)
-hist(dfplot2$BAj.plot.1,breaks=50)
-hist(dfplot2$logBAj.plot.1,breaks=100) # Mieux mais zero inflated
-hist(dfplot2$sqrtBAj.plot.1,breaks=100)
 
 
-hist(dfplotbis$BAIj.plot.1.mean,breaks=50)
-hist(dfplotbis$logBAIj.plot.1.mean,breaks=50)
-hist(dfplotbis$sqrtBAIj.plot.1.mean,breaks=50)
-hist(dfplot2$BAIj.plot.1.mean,breaks=50)
-hist(dfplot2$logBAIj.plot.1.mean,breaks=50)
-hist(dfplot2$sqrtBAIj.plot.1.mean,breaks=50)  ## Best 
 
-
-hist(dfplotbis$BAIj.plot.1,breaks=50)
-hist(dfplotbis$logBAIj.plot.1,breaks=50)
-hist(dfplotbis$sqrtBAIj.plot.1,breaks=50)
-hist(dfplot2$BAIj.plot.1,breaks=50)
-hist(dfplot2$logBAIj.plot.1,breaks=50)
-hist(dfplot2$sqrtBAIj.plot.1,breaks=50) # Best 
-
-
-hist(dfplotbis$dbh.plot.mean,breaks=50)
-hist(dfplotbis$logdbh.plot.mean,breaks=50)
-hist(dfplotbis$sqrtdbh.plot.mean,breaks=50)
-hist(dfplot2$dbh.plot.mean,breaks=50)
-hist(dfplot2$logdbh.plot.mean,breaks=30) # Best 
-hist(dfplot2$sqrtdbh.plot.mean,breaks=30)
 
 # Models 
 Mbin1FAGSYL <- fitme(sp.mort.bin ~ treeNbr + yearsbetweensurveys + min_spei01 + mean_spei01 + min_spei06 + mean_spei06 + min_spei12 + mean_spei12 + min_spei24 + mean_spei24 + min_spei48 + mean_spei48 + BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + logbio1 + bio14_climate_mean.30 + logbio14 + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BA.ha.plot.1:bio1_climate_mean.30 + BA.ha.plot.1:logbio1 + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:logbio1 + BA.ha.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:logbio14 + BAj.plot.1:bio14_climate_mean.30 + BAj.plot.1:logbio14 + BA.ha.plot.1:BAj.plot.1 + bio1_climate_mean.30:bio14_climate_mean.30 + logbio1:logbio14 + BA.ha.plot.1:Plotcat + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + Plotcat:logbio1 + Plotcat:logbio14 + (1|country), data=dfplot2,family = binomial(),method='REML')
@@ -163,21 +139,3 @@ Mbin1FAGSYL <- fitme(sp.mort.bin ~ treeNbr + yearsbetweensurveys + min_spei01 + 
 Mbin1FAGSYL <- fitme(sp.mort.bin ~ treeNbr + yearsbetweensurveys + min_spei01 + mean_spei01 + min_spei06 + mean_spei06 + min_spei12 + mean_spei12 + min_spei24 + mean_spei24 + min_spei48 + mean_spei48 + BAIj.plot.bis + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + bio14_climate_mean.30 + log(dfplot2$bio14_climate_mean.30+5) + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BA.ha.plot.1:bio1_climate_mean.30 + BA.ha.plot.1:log(bio1_climate_mean.30+1) + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:log(bio1_climate_mean.30+1) + BA.ha.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:log(bio14_climate_mean.30+1) + BAj.plot.1:bio14_climate_mean.30 + BAj.plot.1:log(bio14_climate_mean.30+1) + BA.ha.plot.1:BAj.plot.1 + bio1_climate_mean.30:bio14_climate_mean.30 + log(bio1_climate_mean.30+1):log(bio14_climate_mean.30+1) + BA.ha.plot.1:Plotcat + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + Plotcat:log(bio1_climate_mean.30+1) + Plotcat:log(bio14_climate_mean.30+1) + (1|country), data=dfplot2,family = binomial(),method='REML')
 Mbin80EtestOffsetPINSYL <- fitme(sp.mort.bin ~ BAIj.plot.bis + treeNbr +  offset(log(yearsbetweensurveys)) + BA.ha.plot.1 + BAj.plot.1 + bio1_climate_mean.30 + bio14_climate_mean.30 + Plotcat + I(bio1_climate_mean.30^2) + I(bio14_climate_mean.30^2) + BAj.plot.1:bio1_climate_mean.30 + BAj.plot.1:bio14_climate_mean.30 + BA.ha.plot.1:BAj.plot.1 + BAj.plot.1:Plotcat + Plotcat:bio1_climate_mean.30 + Plotcat:bio14_climate_mean.30 + (1|country), data=dfplot2, family = binomial(link = "cloglog"),method='REML')
 
-### Load preexisting models 
-list.dirs(getwd())
-setwd(list.dirs(getwd())[2]) # Chose the model file
-list.files()
-Mbin31 <- get(load(file = "Mbin31.rda")) 
-rm("x")
-
-
-# Process the models : bootstrap and coefficient, saving etc 
-Saving(Mbin3FAGSYLspaMM) # Evaluation of the model 
-Extraction(Mbin31)
-ModelBoot(Mbin3FAGSYLspaMM,4,12,LvL=30,CAT=CAT,nBoot=10,Yportion = 0.80,saveboot=T,nCoeur=10)
-Diagnostic(Mbin3FAGSYLspaMM,0.66,F)
-ExtracTest(Mbin31) # Me donne la liste des paramètres de mon modèles. 
-for (i in c("BAIj.plot.1","BAIj.plot.1.mean","dbh.plot.mean","BA.ha.plot.1","BAj.plot.1","treeNbr","bio1_climate_mean.30","bio12_climate_mean.30","min_spei12","mean_spei12")){
-  Effect_coef(Mbin31,i)}     # Para que l'on veut regarder  parmis ceux citer  
-Effect_summary(Mbin31,"competition") #
-ggEffect(Mbin31,'ABS',"indiv",band=T)
