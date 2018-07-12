@@ -116,12 +116,12 @@ rm("x")
 Saving(Mbin3FAGSYLspaMM) # Evaluation of the model 
 Extraction(M2bin15B)
 ModelBoot(M2bin15B,7,12,LvL=30,CAT=CAT,nBoot=10,Yportion = 0.66,saveboot=T,nCoeur=10)
-Diagnostic(Mbin3FAGSYLspaMM,0.66,F)
+Diagnostic(M2bin15B,0.66,F)
 ExtracTest(M2bin15B) # Me donne la liste des paramètres de mon modèles. 
-for (i in c("BAIj.plot.1","BAIj.plot.1.mean","dbh.plot.mean","BA.ha.plot.1","BAj.plot.1","treeNbr","bio1_climate_mean.30","bio12_climate_mean.30","min_spei12","mean_spei12")){
-  Effect_coef(Mbin31,i)}     # Para que l'on veut regarder  parmis ceux citer  
-Effect_summary(Mbin31,"competition") #
-ggEffect(Mbin31,'ABS',"indiv",band=T)
+for (i in c(A[c(1:4,6:11)])){
+  Effect_coef(M2bin15B,i)}     # Para que l'on veut regarder  parmis ceux citer  
+Effect_summary(M2bin15B,"competition") #
+ggEffect(M2bin15B,'ABS',"indiv",band=T)
 
 
 
