@@ -117,8 +117,8 @@ Effect_coef <- function(x,y){
 
 Effect_summary <- function(x,BioticPara="competition"){
   if (grepl(deparse(substitute(x)),pattern="bin",fixed=T)==T){
-    Dir <- paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/FAGSYL/CLIMAP/Models/binomial/",deparse(substitute(x)),"/")
-  }else Dir <- paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/FAGSYL/CLIMAP/Models/Negbin/",deparse(substitute(x)),"/")
+    Dir <- paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models/binomial/",deparse(substitute(x)),"/")
+  }else Dir <- paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models/Negbin/",deparse(substitute(x)),"/")
   setwd(Dir)      
   clim.effect <- get(load(paste0("clim_effect_",deparse(substitute(x)),".RData"))) ## Load my effects coefficients database (product from the second function)
   
@@ -127,8 +127,8 @@ Effect_summary <- function(x,BioticPara="competition"){
   ############################################
   
   EffectCol <- grep(colnames(clim.effect),pattern = "effect",fixed=T,value=T,invert=F) # Simple effect columns for which coef were extracted
-  EffectCum <- c("climate","biotic","competition") # Add three combined categories
-  if (BioticPara == "competition") EffectCum <- EffectCum[c(1,3)] else EffectCum <- EffectCum[1:2]
+  EffectCum <- c("climate","biotic","competition","spei","bioticAll") # Add four combined categories
+  if (BioticPara == "biotic") EffectCum <- EffectCum[c(1:4)] else EffectCum <- EffectCum[c(1,4,5)]
   EffectAll <- c(EffectCol,EffectCum) ## Simple + Categories 
   # Newdataframes made of these extracted effect and the latitudes 
   ind.clim.bio.abs.imp <- as.data.frame(clim.effect[,c("latitude")]) ## One with absolute values
@@ -158,17 +158,21 @@ Effect_summary <- function(x,BioticPara="competition"){
   ############                                                                                                                #
   ## Biotic ##      ##  'BA' terms and the number of trees (if an effect was calculated for them)n + BAI                      #
   ############                                                                                                                #
-  if (BioticPara != "competition") {Var.biotic <- grep(Var,pattern = paste(c("BA","tree","dbh"),collapse="|"),value=T,invert=F)     #                                    #
+  if (BioticPara != "biotic") {Var.bioticAll <- grep(Var,pattern = paste(c("BA","tree","dbh","yearsb"),collapse="|"),value=T,invert=F)    #
+  #        Also considers the average age of the plot, and the total growth rate of the plot and the years between study      #
   #################                                                                                                           #
   ## Competition ##    # Same as Biotic But the BAI is removed since it is a growth param                                     #
   #################                                                                                                           #
   } else {Var.comp <- grep(Var,pattern = paste(c("BA","tree"),collapse="|"),value=T,invert=F)                                 #
-  Var.comp <- grep(Var.comp,pattern = "BAI",fixed=T,value=T,invert=T)}                                                      #
+  Var.comp <- grep(Var.comp,pattern = "BAI",fixed=T,value=T,invert=T)     # Not the age                                       #
+  Var.biotic <- grep(Var,pattern = paste(c("BAI","yearsb","dbh"),collapse="|"),value=T,invert=F)} # Age and growth            #
+  #                                                                                                                           #
   ################                                                                                                            #
-  ##  Climatic  ##     ## Variable de climat (spei + worlclim)                                                                #
+  ##  Climatic  ##     ## Variable de climat (worlclim) & SPEI                                                                #
   ################                                                                                                            #
-  Var.climate <- grep(Var,pattern = paste(c("spei","climate"),collapse="|"),value=T,invert=F)                                 #
-  #
+  Var.climate <- grep(Var,pattern = paste(c("climate"),collapse="|"),value=T,invert=F)                                        #
+  Var.spei <- grep(Var,pattern = paste(c("spei"),collapse="|"),value=T,invert=F)                                              #
+  #                                                                                                                           #
   #############################################################################################################################
   ######                                                                                                           ############
   ######                                  This is the end of this section                                          ############
@@ -177,16 +181,22 @@ Effect_summary <- function(x,BioticPara="competition"){
   
   
   # For each latitude, the sum of the effects corresponding to the three defined categories is calculated as a new effect column 
-  if (BioticPara == "competition"){
+  if (BioticPara == "biotic"){
     if (length(Var.comp)>1){clim.effect$competition <- apply(abs(clim.effect[,Var.comp]), 1, function(x) sum(x)/length(Var.comp)) #need length superior to 1
     }else clim.effect$competition <- abs(clim.effect[,Var.comp])
     if (length(Var.climate)>1){clim.effect$climate <- apply(abs(clim.effect[,Var.climate]), 1, function(x) sum(x)/length(Var.climate)) #need length superior to 1
     }else clim.effect$climate <- abs(clim.effect[,Var.climate])
-  }else{
+    if (length(Var.spei)>1){clim.effect$spei <- apply(abs(clim.effect[,Var.spei]), 1, function(x) sum(x)/length(Var.spei)) #need length superior to 1
+    }else clim.effect$spei <- abs(clim.effect[,Var.spei])
     if (length(Var.biotic)>1){clim.effect$biotic <- apply(abs(clim.effect[,Var.biotic]), 1, function(x) sum(x)/length(Var.biotic)) #need length superior to 1
     }else clim.effect$biotic <- abs(clim.effect[,Var.biotic])
+  }else{
+    if (length(Var.bioticAll)>1){clim.effect$bioticAll <- apply(abs(clim.effect[,Var.bioticAll]), 1, function(x) sum(x)/length(Var.bioticAll)) #need length superior to 1
+    }else clim.effect$bioticAll <- abs(clim.effect[,Var.bioticAll])
     if (length(Var.climate)>1){clim.effect$climate <- apply(abs(clim.effect[,Var.climate]), 1, function(x) sum(x)/length(Var.climate)) #need length superior to 1
-    }else clim.effect$climate <- abs(clim.effect[,Var.climate])}
+    }else clim.effect$climate <- abs(clim.effect[,Var.climate])
+    if (length(Var.spei)>1){clim.effect$spei <- apply(abs(clim.effect[,Var.spei]), 1, function(x) sum(x)/length(Var.spei)) #need length superior to 1
+    }else clim.effect$spei <- abs(clim.effect[,Var.spei])}
   
   ## Exatrct abs and relative effects for single or categories
   clim.effect$max <- apply(cbind(abs(clim.effect[,EffectCol])), 1, max) # Extract Maximum among the simple effects
@@ -263,8 +273,18 @@ Effect_summary <- function(x,BioticPara="competition"){
   clim.bio.abs <- merge(ind.abs.imp.clim.bio.long, ind.abs.imp.clim.bio.long.se, by=c("latitude", "variable"))
   clim.bio.abs$lwr <- clim.bio.abs$mean-(1.96*clim.bio.abs$se)
   clim.bio.abs$upr <- clim.bio.abs$mean+(1.96*clim.bio.abs$se) 
-  clim.bio.abs$lwr <- ifelse(clim.bio.abs$lwr<0,0,clim.bio.abs$lwr)
-  clim.bio.abs$upr <- ifelse(clim.bio.abs$upr>1,1,clim.bio.abs$upr)
+  #clim.bio.abs$lwr <- ifelse(clim.bio.abs$lwr<0,0,clim.bio.abs$lwr) # NON SENSE TO SCALE IN ABSOLUTE
+  #clim.bio.abs$upr <- ifelse(clim.bio.abs$upr>1,1,clim.bio.abs$upr) # NON SENSE TO SCALE IN ABSOLUTE
+  
+  # Remove infinite values by NA in order to plot correctly 
+  l.Inf1 <- nrow(clim.bio.abs[sapply(clim.bio.abs[,3:6], function(x) is.infinite(x)),3:6])
+  l.Inf2 <- nrow(clim.bio.rel[sapply(clim.bio.rel[,3:6], function(x) is.infinite(x)),3:6])
+  if (l.Inf1!=0){
+    message(paste0("There is ",l.Inf1," Infinite values in the clim.bio.abs database, it will be replaced by NA values in order to be plotted"))
+    clim.bio.abs[,3:6] <- sapply(clim.bio.abs[,3:6], function(x) {x[is.infinite(x)] <- NA; return(x)})}
+  if (l.Inf2!=0){
+    message(paste0("There is ",l.Inf2," Infinite values in the clim.bio.rel database, it will be replaced by NA values in order to be plotted"))
+    clim.bio.rel[,3:6] <- sapply(clim.bio.rel[,3:6], function(x) {x[is.infinite(x)] <- NA; return(x)})}
   
   ## Save it all 
   save(clim.bio.rel, file=paste0("clim_bio_rel_",deparse(substitute(x)),".RData"))
@@ -292,8 +312,10 @@ ggEffect <- function(x,y="REL",effect="sum",band=T){
   clim.bio[,"variable"] <- as.character(clim.bio[,"variable"]) # Transfrom the factor as a charcater vector
   
   # Find my missing values 
-  A <- unique(clim.bio[is.na(clim.bio$se),"latitude"])
-  missing <- data.frame(xmin=A,xmax=A+0.5, ymin=rep(Inf,length=length(A)), ymax=rep(-Inf,length=length(A))) # Identify the missing values automatically 
+  clim.bio <- clim.bio[order(clim.bio$latitude),] # Put the latitude in the right order (added on the 30th july)
+  A <- unique(clim.bio[is.na(clim.bio$mean)&is.na(clim.bio$se),"latitude"]) # Need to be 0 both in the mean and in the SE
+  missing <- data.frame(xmin=A-0.5,xmax=A+0.5, ymin=rep(Inf,length=length(A)), ymax=rep(-Inf,length=length(A))) # Identify the missing values automatically 
+  # A-0.5
   i = 1
   while (is.na(missing$xmin[i+1])==F){
     if (missing$xmax[i+1]-missing$xmax[i]==0.5){
@@ -302,8 +324,11 @@ ggEffect <- function(x,y="REL",effect="sum",band=T){
         missing <- missing[-c(i+1),]
       }} else i=i+1
   }
+  missing[missing$xmin<min(clim.bio$latitude),"xmin"] <- min(clim.bio$latitude) # If missing go under or above the max and min latitude
+  missing[missing$xmax>max(clim.bio$latitude),"xmax"] <- max(clim.bio$latitude)
   
-  Mycol <- c("red","dark green", "dodgerblue3","orange","yellow","gray","black","green","lightblue","gray20") #### The colors that I will use 
+  
+  Mycol <- c("red","dark green", "dodgerblue3","orange","yellow","gray","black","green","lightblue","gray20","gray50") #### The colors that I will use 
   Myline <- c(1,3,6,1,3,6,1,3,6,1,3,6)
   
   # The plot theme 
@@ -340,11 +365,11 @@ ggEffect <- function(x,y="REL",effect="sum",band=T){
   par(mar=c(0, 0, 0, 0), xaxs = "i", yaxs = "i")
   p <- p + geom_line(aes(latitude, mean, colour = as.character(variable), linetype=as.character(variable)), size=0.8)+
     guides(fill=FALSE) +
-    guides(col=guide_legend(ncol=3, byrow=F))
+    guides(col=guide_legend(ncol=ifelse(length(EffectCol)==4,2,3), byrow=F))
   if (effect=="indiv"){p <- p + scale_colour_manual(values=c(Mycol[1:length(EffectCol)]),labels=paste0("  ",EffectCol,"  ")) +
     scale_linetype_manual(values=c(Myline[1:length(EffectCol)]),labels=paste0("  ",EffectCol,"  "))
-  } else if (effect=="sum"){p <- p + scale_colour_manual(values=c("darkorchid4","orange"),labels=paste0("  ",EffectCol,"  "))}
-  
+  } else if (effect=="sum"){p <- p + scale_colour_manual(values=c(Mycol[1:length(EffectCol)]),labels=paste0("  ",EffectCol,"  ")) +
+    scale_linetype_manual(values=c(rep(Myline[1],times=length(EffectCol))),labels=paste0("  ",EffectCol,"  "))}
   if (band==T){p <- p + geom_ribbon(data=clim.bio,aes(latitude, mean, ymin=lwr, ymax=upr, colour=variable, fill=variable),alpha=0.05, linetype=2)
   }else p <- p
   p <- p + geom_rect(data=missing, aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax),colour="light grey", fill="white", inherit.aes=FALSE) +

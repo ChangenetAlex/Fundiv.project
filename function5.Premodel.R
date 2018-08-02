@@ -61,54 +61,62 @@ panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
 
 # Dotchart
 Premodel <- function(z,Resp,Explain,size,save=F){
-  Name <- 
-        if(all(list.dirs(Dir,full.names=F)!="Premodel")) dir.create(paste0(Dir,"/Premodel/"))
-        A <- cbind(Resp,Explain[-c(length(Explain))])
+  Name <- if(all(list.dirs(Dir,full.names=F)!="Premodel")) dir.create(paste0(Dir,"/Premodel/"))
+  #A <- cbind(Resp,Explain[-c(length(Explain))]) # Erreur 
+  A <- c(Resp,Explain[-c(length(Explain))])
   c1 <- rep(z[,c(Resp)],times=length(Explain))
+  z$Plotcat <- as.numeric(as.character(z$Plotcat))
   c2 <- gather(z[,c(Explain)])
   test <- cbind(c1,c2[,c(2,1)])
-  if (save==T) jpeg(file=paste0(Dir,"/Premodel/",Resp,"_Scatterplots.jpeg"),width=710)
-  par(mfrow=c(1,1))
-  xyplot(test[,1]~test[,2] | test[,3],col=1,
-         strip=function(bg="white", ...)
-           strip.default(bg="white", ...),
-         scales=list(alternating=TRUE,
-                     x=list(relation="free"),
-                     y=list(relation="same")),
-         xlab="explanatory variables",
-         ylab="mortality",
-         panel=function(x,y){
-           panel.grid(h=-1,v=2)
-           panel.points(x,y,col=1)
-           panel.loess(x,y,xol=1,lwd=2)})
-  dev.off()
-  if (save==T) jpeg(file=paste0(Dir,"/Premodel/",Resp,"_ClevelandPlot.jpeg"),width=710) # Save it 
-  par(mfrow=c(size,size))
-  for (i in 1:length(A)){
-    dotchart(z[,c(A[i])],
-    groups=factor(z[,c(last(Explain))]),
-    ylab = last(Explain),
-    xlab = A[i],
-    main = "Cleveland dotplot",
-    pch = c(1:3))
-  }
-  dev.off()
-  if (save==T) jpeg(file=paste0(Dir,"/Premodel/",Resp,"_",deparse(substitute(z)),"_",Explain[1],"_Hist.jpeg"),width=710) # Save it 
-  par(mfrow=c(2,2))
-  for (i in 2:length(A)){
-    hist(z[,c(A[i])],breaks=40,xlab="Centered & normed Scale",ylab="Frequency",main="")
-  }
-  dev.off()
-  if (save==T) jpeg(file=paste0(Dir,"/Premodel/",Resp,"_",deparse(substitute(z)),"_",Explain[1],"_PairsPlot.jpeg"),width=710) # Save it 
-  par(mfrow=c(1,1))
-  pairs(z[,c(A)],panel = panel.smooth,upper.panel=panel.cor,diag.panel = panel.hist)
-  dev.off()
-  VIF <- vif(z[,Explain[-c(length(Explain))]])
-  VIFSTEP <- vifstep(z[,Explain[-c(length(Explain))]],th=8)
-  VIF
-  VIFSTEP
-  if (save==T){
-          capture.output(print(VIF),file=paste0(Dir,"/Premodel/",Resp,"_Vif.txt")) # Output as a latex wrapped in a txt file
-          capture.output(print(VIFSTEP),file=paste0(Dir,"/Premodel/",Resp,"_Vifstep.txt")) # Output as a latex wrapped in a txt file
+  
+  if (length(Explain)<6){
+    
+    if (save==T) jpeg(file=paste0(Dir,"/Premodel/",Resp,"_",Explain[1],"_Scatterplots.jpeg"),width=710)
+    par(mfrow=c(1,1))
+    xyplot(test[,1]~test[,2] | test[,3],col=1,
+           type = c("p", "smooth"),
+           scales=list(alternating=TRUE,
+                       x=list(relation="free"),
+                       y=list(relation="same")),
+           xlab="Explanatory variables",
+           ylab="Mortality",
+           panel=function(x,y){
+             panel.grid(h=-1,v=2)
+             panel.points(x,y,col=1,cex=0.2,pch=19)
+             #panel.loess(x,y,lwd=2) draw the lines 
+           })
+    dev.off()
+    if (save==T) jpeg(file=paste0(Dir,"/Premodel/",Resp,"_",Explain[1],"_ClevelandPlot.jpeg"),width=710) # Save it 
+    par(mfrow=c(size,size))
+    for (i in 1:length(A)){
+      dotchart(z[,c(A[i])],
+               groups=factor(z[,c(last(Explain))]),
+               ylab = last(Explain),
+               xlab = A[i],
+               main = "Cleveland dotplot",
+               pch = c(1:3))
+    }
+    dev.off()
+    if (save==T) jpeg(file=paste0(Dir,"/Premodel/",Resp,"_",Explain[1],"_Hist.jpeg"),width=710) # Save it 
+    par(mfrow=c(2,2))
+    for (i in 2:length(A)){
+      hist(z[,c(A[i])],breaks=40,xlab=c(paste0("Centered & normed Scale ",A[i])),ylab="Frequency",main="")
+    }
+    dev.off()
+    if (save==T) jpeg(file=paste0(Dir,"/Premodel/",Resp,"_",Explain[1],"_PairsPlot.jpeg"),width=710) # Save it 
+    par(mfrow=c(1,1))
+    pairs(z[,c(A)],panel = panel.smooth,upper.panel=panel.cor,diag.panel = panel.hist)
+    dev.off()
+    
+  }else{ 
+    
+    VIF <- vif(z[,Explain[-c(length(Explain))]])
+    VIFSTEP <- vifstep(z[,Explain[-c(length(Explain))]],th=8)
+    VIF
+    VIFSTEP
+    if (save==T){
+      capture.output(print(VIF),file=paste0(Dir,"/Premodel/",Resp,"_Vif.txt")) # Output as a latex wrapped in a txt file
+      capture.output(print(VIFSTEP),file=paste0(Dir,"/Premodel/",Resp,"_Vifstep.txt")) # Output as a latex wrapped in a txt file
+    }
   }
 }

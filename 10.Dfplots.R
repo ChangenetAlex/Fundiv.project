@@ -102,11 +102,11 @@ MyDFs <- function(dir="bureau",
                                                                                 ##
   dfplot <-dfplot[!is.na(dfplot$Plotcat) & dfplot$Plotcat != 10, ]              ## Unique plots that falls within the species distribution area remove NA and transition zone
   dfplot$Plotcat <- as.factor(dfplot$Plotcat)                                   ##
-  dfplot <-dfplot[!is.na(dfplot$sp.mortality.plot.count.yr), ]                  ## Remove 2 NA or 14 (sp.count) and remove all french data (no years)
+  dfplot <-dfplot[!is.na(dfplot$sp.mortality.plot.count.yr), ]                  ## Remove 2 NA or 14 (sp.count) 
   Transfo <- c("BA.ha.plot.1","BA.O.plot.1","BAj.plot.1",                       ##
                "dbh.plot.mean","BAIj.plot.1.mean","BAIj.plot.1")                ## Variable to transform 
   for (i in 1:length(Transfo)){                                                 ##
-    dfplot[,paste0("log",Transfo[i])] <- log(dfplot[,Transfo[i]]+1)               ## Log transfo
+    dfplot[,paste0("log",Transfo[i])] <- log(dfplot[,Transfo[i]]+1)             ## Log transfo
     dfplot[,paste0("sqrt",Transfo[i])] <- sqrt(dfplot[,Transfo[i]])}            ## Sqrt transfo 
   saveRDS(get("dfplot"), paste0(Dir, "/dfplotbis", CODE, seuil, ".rds"))        ## Save this database as Dfplot normal 
                                                                                 ##

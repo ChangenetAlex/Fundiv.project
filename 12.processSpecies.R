@@ -71,22 +71,20 @@ close(Errors.files)
 Dir <- c("/home/achangenet/Documents/FUNDIV - NFI - Europe/")
 setwd(Dir)
 source(paste0(Dir,"Myscripts/Fundiv.project/9.Marginality.R"))
-Allcode <- c("PINSYL")
+Allcode <- c("ACEPSE","QUEPUB")
 #Allcode <- list("PICABI","PINPINA","QUEILE","POPTRE","LARDEC","POPNIG")
 Errors.files2 <- file(paste0(Dir,"species/Errors.Marginality.Rout"), open="wt")
 sink(Errors.files2, type="message")
 for (code in Allcode){
-  try(Acp1000(CODE = code,nsample=10000,NF=2,seuil=0.8,seuilC=0.6,save=T),silent=T) #re run the code with this arguments # First function for PCA
+  try(Acp1000(CODE = code,nsample=10000,NF=2,seuil=0.55,seuilC=0.50,save=T),silent=T) #re run the code with this arguments # First function for PCA
 }
 #Allcode <- c("PICABI","PINPINA","FAGSYL","PINHAL","QUEROB","QUEILE","PINNIG","QUEPET","CASSAT","ABIALB","QUEPUB","QUEPYR","FRAEXC","PINPIN",
 #             "QUESUB","BETPEN","ALNGLU","POPTRE","ACEPSE","LARDEC","POPNIG")
 for (code in Allcode){
-  try(Marginality_Levels(CODE=code,seuil=0.8,seuilC=0.6,save=T),silent=T)
+  try(Marginality_Levels(CODE=code,seuil=0.55,seuilC=0.50,save=T),silent=T)
 }
 sink(type="message")
 close(Errors.files2)
-
-
 
 
 ############################################################
@@ -111,11 +109,12 @@ setwd(Dir)
 source(paste0(Dir,"Myscripts/Fundiv.project/10bis.meanDBH.R"))
 Allcode <- c("PINSYL","FAGSYL","PICABI","PINPINA","PINHAL","QUEROB","QUEILE","PINNIG","QUEPET","CASSAT","ABIALB","QUEPUB","QUEPYR","FRAEXC","PINPIN",
              "QUESUB","BETPEN","ALNGLU","POPTRE","ACEPSE","LARDEC","POPNIG")
+Allcode <- c("ACEPSE","QUEPUB")
 Errors.files <- file(paste0(Dir,"our-data/species/Errors.dfplots.meanDBH.Rout"), open="wt")
 sink(Errors.files, type="message")
 for (code in Allcode){
-  for (s in c(0.8,0.7)){
-  try(MeanDBH(dir="bureau",CODE = code,seuil=s,seuilC=0.6),silent=T) #re run the code with this arguments # First function for PCA
+  for (s in c(0.55)){
+  try(MeanDBH(dir="bureau",CODE = code,seuil=s,seuilC=0.50),silent=T) #re run the code with this arguments # First function for PCA
 }}
 sink(type="message")
 close(Errors.files)
@@ -136,8 +135,8 @@ Allcode <- c("PINSYL","FAGSYL","PICABI","PINPINA","PINHAL","QUEROB","QUEILE","PI
 Errors.files <- file(paste0(Dir,"our-data/species/Errors.dfplots.Rout"), open="wt")
 sink(Errors.files,type="message")
 for (code in Allcode){
-  for (s in c(0.8,0.7)){
-  try(MyDFs(dir="bureau",CODE = code,seuil=s,seuilC=0.6),silent=T) #re run the code with this arguments # First function for PCA
+  for (s in c(0.55)){
+  try(MyDFs(dir="bureau",CODE = code,seuil=s,seuilC=0.50),silent=T) #re run the code with this arguments # First function for PCA
 }}
 sink(type="message")
 close(Errors.files)

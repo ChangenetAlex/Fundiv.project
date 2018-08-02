@@ -1,4 +1,5 @@
 # Alex on the 01/06/2018
+# Edited on the 25/07/2018
 # Script to compute the confidence interval with spaMM for any interaction 
 # Function extraction + function Bootstrap
 
@@ -27,8 +28,8 @@ library(stringr)
 # 
 ################### MY PARAMETERS ####################
 LvL <- 20              # Number of levels           ##
-N = 4                  # Variable to vary           ## # Can be the quadratic effects
-Ncat = 6               # The three level variable   ##
+N = 9                  # Variable to vary           ## # Can be the quadratic effects
+Ncat = 7               # The three level variable   ##
 CAT <- as.factor("0")  # Category by defaut is 0.   ##
 nBoot = 10             # nbr of bootstraps          ##
 saveboot = T           # Save or not the plot       ##
@@ -37,12 +38,14 @@ nCoeur = 10            # Nbr of cores               ##
 ######################################################
 
 ### Extract my fixed effects names 
+#x <- Mbin13A.18
 Extraction <- function(x){
   A <- paste0(getCall(x)[2])
   A <- unlist(strsplit(A, "~",fixed = T))[2]
   A <- unlist(strsplit(A, "+",fixed = T))
   A <- grep(A,pattern = "|",fixed=T,value=T,invert=T)
-  A <- grep(A,pattern = ":",fixed=T,value=T,invert=T)
+  A <- unlist(strsplit(A, ":",fixed = T))
+  #A <- grep(A,pattern = ":",fixed=T,value=T,invert=T)
   A <- grep(A,pattern = "e)",fixed=T,value=T,invert=T) #Remove the AC term which remains
   A <- grep(A,pattern = "^[ ]$",value=T,invert=T) #Remove empty characters
   A <- sub("I(","", A, ignore.case = FALSE,fixed = T)
@@ -57,7 +60,6 @@ Extraction <- function(x){
 }
 
 ## Bootstrap function 
-
 ModelBoot <- function(x,N = N,Ncat = Ncat,LvL = LvL, CAT = CAT, nBoot = nBoot,Yportion=Yportion, saveboot = saveboot,nCoeur=nCoeur){
   A <- Extraction(x)
   Variation = Extraction(x)[N]
@@ -71,6 +73,7 @@ ModelBoot <- function(x,N = N,Ncat = Ncat,LvL = LvL, CAT = CAT, nBoot = nBoot,Yp
   myDF = as.data.frame(matrix(ncol = length(A), nrow = LvL*3, NA)) # Df vierge
   colnames(myDF) <- colnames(data) # Bon noms de colonnes
   for (i in c(1:(length(A)))){
+    if (!is.na(myDF[1,i])){next} # It is possible for Plotcatr to be a column before the interesting variable. Therefore, it is possible for a loop to fill two columns in the same iteration and then to erase the info we want (VariationCAT located after Plotcat). This line ensure that is a column is filled, it remains as it is. 
     if (is.numeric(data[,i])){myDF[,i] <- as.numeric(rep(mean(data[,i]),LvL))} # if numeric, put at the average from data
     else if (is.numeric(data[,VariationCAT])){ # If not, is "i" corresponds to Variation CAT ??? If VarCat is a numeric, it is not i ...
       myDF[,VariationCAT] <- c(as.numeric(rep(mean(data[,VariationCAT]),LvL)), # ... Then we need Lvl * the mean of the pop for this column whis is not i
@@ -82,7 +85,8 @@ ModelBoot <- function(x,N = N,Ncat = Ncat,LvL = LvL, CAT = CAT, nBoot = nBoot,Yp
   
   myDF[,Variation] <- seq(min(data[,Variation]),max(data[,Variation]),length=LvL) ### The interest variable was at mean first but is replaced by a sequence of lenbgth LVL.
   
-  #predict(M1,newdata=myDF,re.form=NA) ## Predict for the fitted object (we have 20 points since we have 20 combinationof point with one varying variable)
+  #predict(Mod,newdata=numeric(0)) ## TO RUN IF THERE IS A BUG
+  
   #colnames(myDF)[names(myDF)%in%(C[1:length(C)])] <- D  # If there is a quadratic term -> Need to rename the myDF before bootstrap !!
   pred.boot =rep(NA,nBoot)
   Bootpred <- mclapply(pred.boot,function(train){
@@ -106,30 +110,67 @@ ModelBoot <- function(x,N = N,Ncat = Ncat,LvL = LvL, CAT = CAT, nBoot = nBoot,Yp
         #             sample_n(dfplot2[dfplot2$sp.mortality.plot.ba>0 & !is.na(dfplot2$sp.mortality.plot.ba) & dfplot2$Plotcat.80.60==2,],30))
     }
     sub_binomial = update(x, data=train) # Fit my model on my sample 
-    
     pred.boot=as.numeric(predict(sub_binomial, newdata=myDF,re.form=NA)) # Predict the values for each cases describe in MyDf
-    as.data.frame(pred.boot)},mc.cores=nCoeur,mc.silent=T)
+    },mc.cores=nCoeur,mc.silent=T)
+  as.data.frame(pred.boot) # Does it is usefull for anything ? 
   
+  Myerrors <- unlist(Bootpred[sapply(Bootpred, function(x) inherits(x, "try-error"))]) # Take the errors out 
+  if (length(Myerrors)!=0) {print(Myerrors) # If any, print it on the screen 
+    Bootpred <- Bootpred[sapply(Bootpred, function(x) !inherits(x, "try-error"))] # Keep the non-errors
+    message(paste0(nBoot-length(Bootpred)," Bootstraps on ",nBoot," failed because of an error")) 
+    }
   Bootpred <- as.data.frame(Bootpred) # Convert it as a dataframe 
+  message(paste0("There is ",length(Bootpred[Bootpred>10000])," predicted values above 10000, the maximum being ",max(Bootpred),". These are going to be replaced by NA"))
+  message(paste0(unlist(sapply(as.list(Bootpred),function(x) which(x >10000))),sep=" "),"Are the lines for which a huge values as been estimated")
+  Bootpred[Bootpred>10000] <- NA
   Bootpred0 <- as.data.frame(Bootpred[1:LvL,]) # Mean or Core
   Bootpred1 <- as.data.frame(Bootpred[(1+LvL):(2*LvL),]) # High values or rear edge
   Bootpred2 <- as.data.frame(Bootpred[(1+(LvL*2)):(LvL*3),]) # Low values or leading edge
   
   # compute mean and SD predicted values :
-  Means_Bootpred = rowMeans(Bootpred) # mean of each row for the range
+  Means_Bootpred = rowMeans(Bootpred,na.rm=T) # mean of each row for the range
   SD_Bootpred = apply(Bootpred, 1, sd) # sd of each column for the range 
-  Means_Bootpred0 = rowMeans(Bootpred0) # mean of each row
+  yMAX <- max(Means_Bootpred)+max(SD_Bootpred) # Here is the maximum values that will be the limit for the plot
+  Means_Bootpred0 = rowMeans(Bootpred0,na.rm=T) # mean of each row
   SD_Bootpred0 = apply(Bootpred0, 1, sd) # sd of each column
-  Means_Bootpred1 = rowMeans(Bootpred1) # mean of each row
+  Means_Bootpred1 = rowMeans(Bootpred1,na.rm=T) # mean of each row
   SD_Bootpred1 = apply(Bootpred1, 1, sd) # sd of each columnMeans_Bootpred = rowMeans(Bootpred) # mean of each row
-  Means_Bootpred2 = rowMeans(Bootpred2) # mean of each row
+  Means_Bootpred2 = rowMeans(Bootpred2,na.rm=T) # mean of each row
   SD_Bootpred2 = apply(Bootpred2, 1, sd) # sd of each column
   
   # Retrieve original variation AND if log ou sqrt redefine the column to go 
-  if (grepl(Variation,pattern = "sqrt",fixed=T)==T){Variation <- sub("sqrt","", Variation, ignore.case = FALSE,fixed = T)
-  }else if (grepl(Variation,pattern = "log",fixed=T)==T) Variation <- sub("log","", Variation, ignore.case = FALSE,fixed = T)
-  original_Variation=myDF[1:LvL,Variation]*sd(dfplot[,Variation],na.rm=T)+mean(dfplot[,Variation],na.rm=T) #From myDF data to real values based on dfplot
+  #if (grepl(Variation,pattern = "sqrt",fixed=T)==T){Variation <- sub("sqrt","", Variation, ignore.case = FALSE,fixed = T)
+  #}else if (grepl(Variation,pattern = "log",fixed=T)==T) Variation <- sub("log","", Variation, ignore.case = FALSE,fixed = T)
+  #original_Variation=myDF[1:LvL,Variation]*sd(dfplot[,Variation],na.rm=T)+mean(dfplot[,Variation],na.rm=T) #From myDF data to real values based on dfplot
 
+  # Retrieve original variation AND if log ou sqrt redefine the column to go 
+  
+  # Check infinite and Nan values and remove the line. (Just infinite for the moment) and remove them after 
+  l.NaN <- length(which(is.nan(dfplotbis[,Variation])))
+  l.Inf <- length(which(is.infinite(dfplotbis[,Variation])))
+  if (l.NaN!=0|l.Inf!=0){
+    message(paste0("There is ",l.NaN," NaN values in the original database and ",l.Inf," Infinite values for the Variation variable : ",Variation,
+                   " It will be removed from dfplotbis database to calculate mean, sd and to retrieve original values"))}
+  
+  ## Replace Inf values by NA
+  
+  if (l.Inf!=0){
+    Z <- dfplotbis[,Variation]
+    Z[is.infinite(Z)] <- NA
+    dfplotbis[,Variation] <- Z}
+  
+  # If sqrt scaled
+  if (grepl(Variation,pattern = "sqrt",fixed=T)==T){
+  original_Variation=myDF[1:LvL,Variation]*sd(dfplotbis[,Variation],na.rm=T)+mean(dfplotbis[,Variation],na.rm=T) #Descale and denorm with tranformed but no scaled variables (dfplotbis)
+  original_Variation=original_Variation*original_Variation # Detrasnformed
+  Variation <- sub("sqrt","", Variation, ignore.case = FALSE,fixed = T)
+  #If logscaled
+  }else if (grepl(Variation,pattern = "log",fixed=T)==T){ #If 
+  original_Variation=myDF[1:LvL,Variation]*sd(dfplotbis[,Variation],na.rm=T)+mean(dfplotbis[,Variation],na.rm=T) #Descale and denorm with tranformed but no scaled variables (dfplotbis)
+  original_Variation <- exp(original_Variation)-1 # De transfo  
+  Variation <- sub("log","", Variation, ignore.case = FALSE,fixed = T)
+  #If not scaled
+  }else original_Variation=myDF[1:LvL,Variation]*sd(dfplotbis[,Variation],na.rm=T)+mean(dfplotbis[,Variation],na.rm=T) #Descale and denorm with original variable (dfplotbis)
   
   # Create a longformat DF with the original variation parameter as well
   testDF <- data.frame(Means_Bootpred0,Means_Bootpred1,Means_Bootpred2,original_Variation)
@@ -161,7 +202,9 @@ ModelBoot <- function(x,N = N,Ncat = Ncat,LvL = LvL, CAT = CAT, nBoot = nBoot,Yp
   } else {
     setwd(dir = paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models/Negbin/",deparse(substitute(x)),"/"))
     p1 <- p1 + labs(title=paste0(VariationCAT," : ",Variation), y=paste0(Esp,": Annual predicted mortality (in ‰)"), x=Variation, caption="Changenet et al. 2018")}
-  p1 <- p1 + theme_light(base_size = 15)+
+  p1 <- p1 + coord_cartesian(ylim=c(0,yMAX),expand = T)+
+    #scale_y_continuous(breaks = waiver(),limits = c(0,yMAX)) + 
+    theme_light(base_size = 15)+
     theme(text = element_text(face="bold"),legend.position = c(0.5,0.9),legend.direction ="horizontal",
           axis.text.x = element_text(size=13,color="black"),axis.text.y = element_text(size=13,color="black"),
           legend.background=element_rect(fill="white",colour="black",size=0.2),
@@ -172,4 +215,6 @@ ModelBoot <- function(x,N = N,Ncat = Ncat,LvL = LvL, CAT = CAT, nBoot = nBoot,Yp
   print(p1)
   if (saveboot==T){ggsave(filename = paste0("GG_",deparse(substitute(x)),"_",seuil,"_",Variation,"_",VariationCAT,".png"),plot = p1, width = 12.37, height = 7.04, dpi=150,units = "in")} # To modify 
   #Here is the final plot
+  dev.off()
+  gc()
 }

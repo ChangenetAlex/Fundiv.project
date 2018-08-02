@@ -230,7 +230,7 @@ Marginality_Levels <- function(CODE,seuil=0.8,seuilC=0.6,save=T){
   
   #Determine the color according to the number
   A=summary_all[summary_all$Clim_Var=="bio1",c(2:4)] # my plots
-  Plotcat <- extract(get(paste0("CLIMAP_",seuil,"_",seuilC)),A[,1:2])
+  Plotcat <- raster::extract(get(paste0("CLIMAP_",seuil,"_",seuilC)),A[,1:2])
   capture.output(print(summary(as.factor(Plotcat))), file=paste0(Dir,"species/",CODE,"/CLIMAP/MarginCore.Table.txt"),append=T) # Summary number of plots !!! 
   #capture.output(print(summary(as.factor(Plotcat))), file=paste0(Dir,"species/MarginCore.Table.txt"),append = T) # Summary number of plots !!! 
   Myplot = cbind(A,Plotcat)
@@ -342,6 +342,7 @@ Marginality_Levels <- function(CODE,seuil=0.8,seuilC=0.6,save=T){
   #Merge climate data with inventory individual data
   assign(paste0("Mydf_",CODE,"_",seuil,"_",seuilC),merge(Myplot,Sp2,by=c("plotcode")),envir = globalenv())
   saveRDS(get(paste0("Mydf_",CODE,"_",seuil,"_",seuilC)), file = paste0(Dir,"species/",CODE,"/CLIMAP/Mydf_",CODE,"_",seuil,"_",seuilC,".rds"))
+  rm(list = ls())
   gc()
 }
 

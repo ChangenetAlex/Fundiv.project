@@ -31,14 +31,19 @@ Saving <- function(x){
   if (x$family$family=="binomial"){
     Dir <- paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models/binomial")
   }else Dir <- paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models/Negbin")
-  dir.create(paste0(Dir,"/",deparse(substitute(x)),"/"))
-  save(x, file = paste0(Dir,"/",deparse(substitute(x)),"/",deparse(substitute(x)),".rda")) # save the model as an RDA file 
+  if (length(grep(substitute(x),pattern = "get",fixed=T,value=F,invert=F))!=0){ # Added to simplify the model selection process 
+    z <- paste0(Mymod,num)
+    dir.create(paste0(Dir,"/",z,"/"))
+    save(x, file = paste0(Dir,"/",z,"/",z,".rda")) # save the model as an RDA file 
+  }else {dir.create(paste0(Dir,"/",deparse(substitute(x)),"/"))
+    save(x, file = paste0(Dir,"/",deparse(substitute(x)),"/",deparse(substitute(x)),".rda"))
+    z <- deparse(substitute(x))} # save the model as an RDA file 
   
   # New section 
   r1 <- data.frame(x$data$longitude, x$data$latitude, predict(x))
   colnames(r1) <- c("X","Y","Z")
   if (x$family$family=="binomial") {r1$bin <- ifelse(r1$Z>0.20,"0",ifelse(r1$Z>0.1,"1","2")) ## Percentage of mortality as classes 
-}else r1$bin <- ifelse(r1$Z>40,"0",ifelse(r1$Z>20,"1","2"))
+  }else r1$bin <- ifelse(r1$Z>40,"0",ifelse(r1$Z>20,"1","2"))
   par(mfrow=c(1,1))
   worldmap <- getMap(resolution = "high")
   europe <- worldmap[which(worldmap$REGION=="Europe"),]
@@ -60,7 +65,7 @@ Saving <- function(x){
   }else {p <- p + scale_colour_manual(values = c("red","white","blue"),name="Number of events by plot",labels = c(">40", "20-40","0-20")) +
     scale_shape_manual(values = c(20,3,17),name="Number of events by plot",labels = c(">40", "20-40","0-20")) +
     scale_size_manual(values= c(1,1,1),name="Number of events by plot",labels = c(">40", "20-40","0-20"))}
-    p <- p + guides(shape = guide_legend(override.aes = list(size = 5)))+
+  p <- p + guides(shape = guide_legend(override.aes = list(size = 5)))+
     labs(title=paste0('Predicted mortality'), y=paste0("Latitude"), x="Longitude", caption="Changenet et al. 2018")+
     theme(text = element_text(face="bold"),legend.direction ="vertical",
           axis.text.x = element_text(size=13,color="black"),axis.text.y = element_text(size=13,color="black"),
@@ -70,14 +75,16 @@ Saving <- function(x){
           axis.line = element_line(colour="black"),
           plot.title = element_text(size=18,hjust = 0.5),
           plot.caption = element_text(face="bold.italic"))
-    ggsave(filename = paste0(Dir,"/",deparse(substitute(x)),"/",deparse(substitute(x)),"Pred.Mort_",deparse(substitute(x)),".png"),plot = p, width = 12.37, height = 7.04, dpi=150,units = "in")
+  #ggsave(filename = paste0(Dir,"/",deparse(substitute(x)),"/",deparse(substitute(x)),"Pred.Mort_",deparse(substitute(x)),".png"),plot = p, width = 12.37, height = 7.04, dpi=150,units = "in")
+  ggsave(filename = paste0(Dir,"/",z,"/",z,"Pred.Mort_",z,".png"),plot = p, width = 12.37, height = 7.04, dpi=150,units = "in")
+  
   # End new section ##
   
   if (x$family$family=="binomial"){Namecat <- "Binomial"} else Namecat <- "Negbin" # Identidy the family
   y <- data.frame(matrix(unlist(rsquared.AC(x)), nrow=1,byrow=T,dimnames = list(c(NULL),c("family","link","method","Marginal","Conditional","Lik","AICm","Craw1","ICCadj1", "PCVran", "PCVObs","ICCraw2","ICCadj2","PCV1","PCV2"))))
   if (length(list.files(path=paste0(Dir,"/"),pattern=paste0("Models_",Namecat,CODE,"_",seuil,".csv")))==0){
-    write.table(y,paste0(Dir,"/Models_",Namecat,CODE,"_",seuil,".csv"),append=T, quote = FALSE, sep=";",row.names = deparse(substitute(x)),col.names=NA) # If file does not exist
-  }else write.table(y, paste0(Dir,"/Models_",Namecat,CODE,"_",seuil,".csv"),append=T, quote = FALSE, sep=";",row.names = deparse(substitute(x)),col.names=F)  # If it does exist                             
+    write.table(y,paste0(Dir,"/Models_",Namecat,CODE,"_",seuil,".csv"),append=T, quote = FALSE, sep=";",row.names = z,col.names=NA) # If file does not exist
+  }else write.table(y, paste0(Dir,"/Models_",Namecat,CODE,"_",seuil,".csv"),append=T, quote = FALSE, sep=";",row.names = z,col.names=F)  # If it does exist                             
   # The rsquared output are stored at the end of each other in a huge Csv file
   
   A <- as.data.frame(summary(x)[2]) # All intercepts fixed
@@ -97,7 +104,7 @@ Saving <- function(x){
   d<- seq(0,40,length.out=80)
   y<- Matern(d, range=as.numeric(D[2,2]), smoothness=as.numeric(D[1,2])) # Plot my spatial effects
   matplot( d, y, type="l", lty=1, lwd=2,main=c(bquote(paste("Estimated parameters : ",rho," = ",.(round(as.numeric(D[2,2]),3))," and ",nu," = ",.(round(as.numeric(D[1,2]),3))))),ylab="Response covariance",xlab="Distance between plots")
-  dev.print(file=paste0(Dir,"/",deparse(substitute(x)),"/",deparse(substitute(x)),"Autocor.jpeg"),device=jpeg,width=710) # Save it 
+  dev.print(file=paste0(Dir,"/",z,"/",z,"Autocor.jpeg"),device=jpeg,width=710) # Save it 
   
   } else { # If there is no spatial effect 
     
@@ -115,8 +122,8 @@ Saving <- function(x){
   colnames(C) <- c("Estimate","Cond. SE","t-value")
   C[,"Signif"] <- ""
   C[C$`t-value`!="" & (as.numeric(C$`t-value`)>=2 | as.numeric(C$`t-value`)<=-2),"Signif"] <- "*" # Add significiance 
-  write.table(C,paste0(Dir,"/",deparse(substitute(x)),"/",deparse(substitute(x)),"_Table.csv"),sep=";",col.names = NA, row.names = T) # Variable outputs in a table.csv
+  write.table(C,paste0(Dir,"/",z,"/",z,"_Table.csv"),sep=";",col.names = NA, row.names = T) # Variable outputs in a table.csv
   D <- kable(C,digits = 3,"latex",align=c("rrrc"))
-  capture.output(print(D), file=paste0(Dir,"/",deparse(substitute(x)),"/",deparse(substitute(x)),"_Tex.Table.txt")) # Output as a latex wrapped in a txt file
+  capture.output(print(D), file=paste0(Dir,"/",z,"/",z,"_Tex.Table.txt")) # Output as a latex wrapped in a txt file
 }
 

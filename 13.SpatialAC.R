@@ -173,6 +173,6 @@ moran <- lctools::moransI.v(Coords, bws, dfplot3$mortality.plot.rate, WType='Bin
 l.moran<-lctools::l.moransI(Coords,6,dfplot3$mortality.plot.rate) # scatterplot 
 
 # Vario with Correlog
-corD <- correlog(Coords, dfplot3$mortality.plot.count, method = "Moran")
+corD <- correlog(Coords, dfplotVARIO$sp.mortality.plot.rate, method = "Moran")
 plot(corD)
 dev.print(file="Vario.Correlog.jpeg",device=jpeg,width=1100)
