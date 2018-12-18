@@ -38,7 +38,7 @@ nCoeur = 10            # Nbr of cores               ##
 ######################################################
 
 ### Extract my fixed effects names 
-#x <- Mbin13A.18
+#x <- M2bin7B.17
 Extraction <- function(x){
   A <- paste0(getCall(x)[2])
   A <- unlist(strsplit(A, "~",fixed = T))[2]
@@ -54,6 +54,8 @@ Extraction <- function(x){
   A <- sub("))","", A, ignore.case = FALSE,fixed = T)
   A <- sub("\n ","", A, ignore.case = FALSE,fixed = T) # New line
   A <- sub(" ","", A, ignore.case = FALSE,fixed = T)
+  A <- sub(" ","", A, ignore.case = FALSE,fixed = T) #Twice
+  A <- sub(" ","", A, ignore.case = FALSE,fixed = T) #Twice
   A <- sub(" ","", A, ignore.case = FALSE,fixed = T) #Twice
   A <- unique(A)
   A
@@ -120,23 +122,24 @@ ModelBoot <- function(x,N = N,Ncat = Ncat,LvL = LvL, CAT = CAT, nBoot = nBoot,Yp
     message(paste0(nBoot-length(Bootpred)," Bootstraps on ",nBoot," failed because of an error")) 
     }
   Bootpred <- as.data.frame(Bootpred) # Convert it as a dataframe 
-  message(paste0("There is ",length(Bootpred[Bootpred>10000])," predicted values above 10000, the maximum being ",max(Bootpred),". These are going to be replaced by NA"))
-  message(paste0(unlist(sapply(as.list(Bootpred),function(x) which(x >10000))),sep=" "),"Are the lines for which a huge values as been estimated")
-  Bootpred[Bootpred>10000] <- NA
+  message(paste0("There is ",length(Bootpred[Bootpred>2000])," predicted values above 2000, the maximum being ",max(Bootpred),". These are going to be replaced by NA"))
+  Above <- as.data.frame(table(unlist(sapply(as.list(Bootpred),function(x) which(x >2000)))))
+  message(paste0(Above$Var1," * ",Above$Freq,sep="\n"),"Are the lines for which a huge values as been estimated and the number of times")
+  Bootpred[Bootpred>2000] <- NA
   Bootpred0 <- as.data.frame(Bootpred[1:LvL,]) # Mean or Core
   Bootpred1 <- as.data.frame(Bootpred[(1+LvL):(2*LvL),]) # High values or rear edge
   Bootpred2 <- as.data.frame(Bootpred[(1+(LvL*2)):(LvL*3),]) # Low values or leading edge
   
-  # compute mean and SD predicted values :
+  # compute mean and SD predicted values without a accounting for the NA 
   Means_Bootpred = rowMeans(Bootpred,na.rm=T) # mean of each row for the range
-  SD_Bootpred = apply(Bootpred, 1, sd) # sd of each column for the range 
+  SD_Bootpred = apply(Bootpred, 1, function(x) sd(x,na.rm=T)) # sd of each column for the range 
   yMAX <- max(Means_Bootpred)+max(SD_Bootpred) # Here is the maximum values that will be the limit for the plot
   Means_Bootpred0 = rowMeans(Bootpred0,na.rm=T) # mean of each row
-  SD_Bootpred0 = apply(Bootpred0, 1, sd) # sd of each column
+  SD_Bootpred0 = apply(Bootpred0, 1, function(x) sd(x,na.rm=T)) # sd of each column
   Means_Bootpred1 = rowMeans(Bootpred1,na.rm=T) # mean of each row
-  SD_Bootpred1 = apply(Bootpred1, 1, sd) # sd of each columnMeans_Bootpred = rowMeans(Bootpred) # mean of each row
+  SD_Bootpred1 = apply(Bootpred1, 1, function(x) sd(x,na.rm=T)) # sd of each columnMeans_Bootpred = rowMeans(Bootpred) # mean of each row
   Means_Bootpred2 = rowMeans(Bootpred2,na.rm=T) # mean of each row
-  SD_Bootpred2 = apply(Bootpred2, 1, sd) # sd of each column
+  SD_Bootpred2 = apply(Bootpred2, 1, function(x) sd(x,na.rm=T)) # sd of each column
   
   # Retrieve original variation AND if log ou sqrt redefine the column to go 
   #if (grepl(Variation,pattern = "sqrt",fixed=T)==T){Variation <- sub("sqrt","", Variation, ignore.case = FALSE,fixed = T)
@@ -192,10 +195,10 @@ ModelBoot <- function(x,N = N,Ncat = Ncat,LvL = LvL, CAT = CAT, nBoot = nBoot,Yp
     geom_linerange()
   # Legend levels depend upon the used variable
   if (is.numeric(data[,VariationCAT]))
-  {p1 <- p1 + scale_color_manual("",values = c("black", "red", "blue"),labels=(c("Average level","High level","Low level")))+
+  {p1 <- p1 + scale_color_manual("",values = c("black", "blue", "red"),labels=(c("Average level","High level","Low level")))+
     scale_shape_manual("", values=c(1,2,3),labels=(c("Average level","High level","Low level")))
-  }else p1 <- p1 + scale_color_manual("",values = c("black", "red", "blue"),labels=(c("Core","Rear Edge","Leading Edge")))+
-    scale_shape_manual("", values=c(1,2,3),labels=(c("Core","Rear Edge","Leading Edge")))
+  }else p1 <- p1 + scale_color_manual("",values = c("black", "blue", "red"),labels=(c("Core","Leading Edge","Rear Edge")))+
+    scale_shape_manual("", values=c(1,2,3),labels=(c("Core","Leading Edge","Rear Edge")))
   if (x$family$family=="binomial"){
     setwd(dir = paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models/binomial/",deparse(substitute(x)),"/"))
     p1 <- p1 + labs(title=paste0(VariationCAT," : ",Variation), y=paste0(Esp,": Probability of at least one mortality event"), x=Variation, caption="Changenet et al. 2018")

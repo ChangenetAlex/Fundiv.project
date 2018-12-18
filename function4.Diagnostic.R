@@ -93,11 +93,11 @@ Diagnostic <- function(x,Yportion,AllInOne=T){
     l.moran <- lctools::l.moransI(Coords,6,dfplotVARIO$sp.mort.bin) # scatterplot 
     dev.off()
     
-    # Vario with Correlog
-    #corD <- correlog(Coords, dfplotVARIO$sp.mort.bin, method = "Moran")
-    #jpeg(file=paste0(deparse(substitute(x)),"Vario.AC.Correlog.jpeg"),width = 12.37, height = 7.04, res=150,units = "in")
-    #plot(corD)
-    #dev.off()
+    # Vario with Correlog (a enlever ou pas)
+    corD <- correlog(Coords, dfplotVARIO$sp.mort.bin, method = "Moran")
+    jpeg(file=paste0(deparse(substitute(x)),"Vario.AC.Correlog.jpeg"),width = 12.37, height = 7.04, res=150,units = "in")
+    plot(corD)
+    dev.off()
     }
   
   

@@ -314,6 +314,7 @@ ggEffect <- function(x,y="REL",effect="sum",band=T){
   # Find my missing values 
   clim.bio <- clim.bio[order(clim.bio$latitude),] # Put the latitude in the right order (added on the 30th july)
   A <- unique(clim.bio[is.na(clim.bio$mean)&is.na(clim.bio$se),"latitude"]) # Need to be 0 both in the mean and in the SE
+  if (length(A)!=0){
   missing <- data.frame(xmin=A-0.5,xmax=A+0.5, ymin=rep(Inf,length=length(A)), ymax=rep(-Inf,length=length(A))) # Identify the missing values automatically 
   # A-0.5
   i = 1
@@ -326,8 +327,7 @@ ggEffect <- function(x,y="REL",effect="sum",band=T){
   }
   missing[missing$xmin<min(clim.bio$latitude),"xmin"] <- min(clim.bio$latitude) # If missing go under or above the max and min latitude
   missing[missing$xmax>max(clim.bio$latitude),"xmax"] <- max(clim.bio$latitude)
-  
-  
+  }else missing <- NULL
   Mycol <- c("red","dark green", "dodgerblue3","orange","yellow","gray","black","green","lightblue","gray20","gray50") #### The colors that I will use 
   Myline <- c(1,3,6,1,3,6,1,3,6,1,3,6)
   
@@ -372,8 +372,9 @@ ggEffect <- function(x,y="REL",effect="sum",band=T){
     scale_linetype_manual(values=c(rep(Myline[1],times=length(EffectCol))),labels=paste0("  ",EffectCol,"  "))}
   if (band==T){p <- p + geom_ribbon(data=clim.bio,aes(latitude, mean, ymin=lwr, ymax=upr, colour=variable, fill=variable),alpha=0.05, linetype=2)
   }else p <- p
-  p <- p + geom_rect(data=missing, aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax),colour="light grey", fill="white", inherit.aes=FALSE) +
-    geom_rect(xmin=min(clim.bio$latitude), xmax=max(clim.bio$latitude), ymin=-0.10, ymax=-0.05,colour="black", fill="black")+
+  if (is.null(missing)==F){p <- p + geom_rect(data=missing, aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax),colour="light grey", fill="white", inherit.aes=FALSE)
+  }else p <- p
+  p <- p + geom_rect(xmin=min(clim.bio$latitude), xmax=max(clim.bio$latitude), ymin=-0.10, ymax=-0.05,colour="black", fill="black")+
     geom_rect(xmin=0,xmax=42.5,ymin=-Inf,ymax=-0.1,colour="black", fill="red",alpha=0.2)+
     geom_rect(xmin=42.5,xmax=58,ymin=-Inf,ymax=-0.1,colour="black", fill="green",alpha=0.5)+
     geom_rect(xmin=58,xmax=Inf,ymin=-Inf,ymax=-0.1,colour="black", fill="blue",alpha=0.8)+
