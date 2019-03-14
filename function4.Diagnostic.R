@@ -62,13 +62,13 @@ Diagnostic <- function(x,Yportion,AllInOne=T){
     Coords <- cbind(dfplotVARIO$longitude, dfplotVARIO$latitude) ## Coordonee
     bws <- c(2,3,5, 10, 15, 20,30,40,50,100) # Neighbors
     
-    jpeg(file=paste0(deparse(substitute(x)),"VarioAC.LCtools.jpeg"),width = 12.37, height = 7.04, res=150,units = "in")
+    png(file=paste0(deparse(substitute(x)),"VarioAC.LCtools.png"),width = 12.37, height = 7.04, res=600,units = "in")
     moran <- lctools::moransI.v(Coords, bws, dfplotVARIO$sp.mortality.plot.rate.yr, WType='Binary') #par defaut = binary et neighbors
     capture.output(lctools::moransI.v(Coords, bws, dfplotVARIO$sp.mortality.plot.rate.yr, WType='Binary'),file="MoranTest.LCTools")
     dev.off()
     bws <- c(10,20,30,40,42) # Kernels distance
     #moran <- lctools::moransI.v(Coords, bws, dfplotVARIO$sp.mortality.plot.rate.yr, WType='Binary',family="fixed")
-    jpeg(file=paste0(deparse(substitute(x)),"ScatterAC.LCtools.jpeg"),width = 12.37, height = 7.04, res=150,units = "in")
+    png(file=paste0(deparse(substitute(x)),"ScatterAC.LCtools.png"),width = 12.37, height = 7.04, res=600,units = "in")
     l.moran <- lctools::l.moransI(Coords,6,dfplotVARIO$sp.mortality.plot.rate.yr) # scatterplot 
     dev.off()
     # Vario with Correlog
@@ -83,22 +83,25 @@ Diagnostic <- function(x,Yportion,AllInOne=T){
     Coords <- cbind(dfplotVARIO$longitude, dfplotVARIO$latitude) ## Coordonee
     bws <- c(2,3,5, 10, 15, 20,30,40,50,100) # Neighbors
     
-    jpeg(file=paste0(deparse(substitute(x)),"VarioAC.LCtools.jpeg"),width = 12.37, height = 7.04, res=150,units = "in")
+    png(file=paste0(deparse(substitute(x)),"VarioAC.LCtools.png"),width = 12.37, height = 7.04, res=600,units = "in")
     moran <- lctools::moransI.v(Coords, bws, dfplotVARIO$sp.mort.bin, WType='Binary') #par defaut = binary et neighbors
     capture.output(lctools::moransI.v(Coords, bws, dfplotVARIO$sp.mort.bin, WType='Binary'),file="MoranTest.LCTools")
     dev.off()
     bws <- c(10,20,30,40,42) # Kernels distance
     #moran <- lctools::moransI.v(Coords, bws, dfplotVARIO$sp.mortality.plot.rate.yr, WType='Binary',family="fixed")
-    jpeg(file=paste0(deparse(substitute(x)),"ScatterAC.LCtools.jpeg"),width = 12.37, height = 7.04, res=150,units = "in")
+    png(file=paste0(deparse(substitute(x)),"ScatterAC.LCtools.png"),width = 12.37, height = 7.04, res=600,units = "in")
     l.moran <- lctools::l.moransI(Coords,6,dfplotVARIO$sp.mort.bin) # scatterplot 
     dev.off()
     
     # Vario with Correlog (a enlever ou pas)
     corD <- correlog(Coords, dfplotVARIO$sp.mort.bin, method = "Moran")
-    jpeg(file=paste0(deparse(substitute(x)),"Vario.AC.Correlog.jpeg"),width = 12.37, height = 7.04, res=150,units = "in")
+    png(file=paste0(deparse(substitute(x)),"Vario.AC.Correlog.png"),width = 12.37, height = 7.04, res=600,units = "in")
     plot(corD)
     dev.off()
-    }
+  }
+  
+  
+  # Add lines to do the same on the residuals 
   
   
   ### Cross validation ###
@@ -117,8 +120,8 @@ Diagnostic <- function(x,Yportion,AllInOne=T){
     M2 = predict (M1, newdata=df2,re.form=NA,type="response")
     
     ### Cor Test ###
-    if (AllInOne == T){jpeg(file=paste0(deparse(substitute(x)),"Diagnostic.jpeg"),width = 12.37, height = 7.04, res=150,units = "in");par(mfrow = c(2,2))
-    } else {jpeg(file=paste0(deparse(substitute(x)),"_Response_VS_predicted.jpeg"),width = 12.37, height = 7.04, res=150,units = "in")}
+    if (AllInOne == T){png(file=paste0(deparse(substitute(x)),"Diagnostic.png"),width = 12.37, height = 7.04, res=600,units = "in");par(mfrow = c(2,2))
+    } else {png(file=paste0(deparse(substitute(x)),"_Response_VS_predicted.png"),width = 12.37, height = 7.04, res=600,units = "in")}
     
     D <- cor.test(df2$sp.mortality.plot.rate.yr, M2, method = ("pearson")) # To record and store somewhere
     capture.output(print(D), file=paste0(deparse(substitute(x)),"_CrossValid.Table.txt")) # Output as a latex wrapped in a txt file
@@ -130,20 +133,20 @@ Diagnostic <- function(x,Yportion,AllInOne=T){
     ### Residuals ###
     ResM <- residuals(M1)
     FitM <- fitted(M1)
-    if (AllInOne == F) jpeg(file=paste0(deparse(substitute(x)),"_Residuals_VS_fitted.jpeg"),width = 12.37, height = 7.04, res=150,units = "in") # Save it 
+    if (AllInOne == F) png(file=paste0(deparse(substitute(x)),"_Residuals_VS_fitted.png"),width = 12.37, height = 7.04, res=600,units = "in") # Save it 
     plot(ResM ~ FitM, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted",
          cex.main=1.5, cex.lab =1.3)
     abline(h=0)
     if (AllInOne == F){dev.off()} # Save it 
     
     # Save this plot 
-    if (AllInOne == F){jpeg(file=paste0(deparse(substitute(x)),"_QQplot.jpeg"),width = 12.37, height = 7.04, res=150,units = "in")} # Save it 
+    if (AllInOne == F){png(file=paste0(deparse(substitute(x)),"_QQplot.png"),width = 12.37, height = 7.04, res=600,units = "in")} # Save it 
     qqnorm(ResM, cex.main=1.5, cex.lab =1.3)
     qqline(ResM)
     if (AllInOne == F){dev.off()} # Save it 
     
     # Save this one 
-    if (AllInOne == F){jpeg(file=paste0(deparse(substitute(x)),"_Observed_VS_fitted.jpeg"),width = 12.37, height = 7.04, res=150,units = "in")} # Save it 
+    if (AllInOne == F){png(file=paste0(deparse(substitute(x)),"_Observed_VS_fitted.png"),width = 12.37, height = 7.04, res=600,units = "in")} # Save it 
     plot(M1$data$sp.mortality.plot.count.yr ~ FitM, xlab="Fitted values", ylab="Observed", main="Observed vs. fitted",
          cex.main=1.5, cex.lab =1.3)
     abline(0,1)
@@ -161,7 +164,7 @@ Diagnostic <- function(x,Yportion,AllInOne=T){
     df2=dfplot2[!is.na(dfplot2$sp.mort.bin),][-calibrate.data,]
     
     # Added on the 13th of july
-    jpeg(file=paste0(deparse(substitute(x)),"_AUroC.jpeg"),width = 12.37, height = 7.04,units = "in",res=150) # Save it 
+    png(file=paste0(deparse(substitute(x)),"_AUroC.png"),width = 12.37, height = 7.04,units = "in",res=600) # Save it 
     myroc <- roc(response = x$data$sp.mort.bin, predictor=as.numeric(predict(x)),
                  density.controls, density.cases, percent=FALSE, na.rm=TRUE,
                  quiet = TRUE, smooth=FALSE, auc=TRUE, ci=TRUE, plot=TRUE,print.auc=T,auc.polygon=T,grid=T)
@@ -180,8 +183,8 @@ Diagnostic <- function(x,Yportion,AllInOne=T){
     D <- cor.test(df2$sp.mort.bin, M2$V1, method = ("pearson")) # To record somewhere
     capture.output(print(D), file=paste0(deparse(substitute(x)),"_CrossValid.Table.txt")) # Output as a latex wrapped in a txt file
     
-    if (AllInOne == T){jpeg(file=paste0(deparse(substitute(x)),"Diagnostic.jpeg"),width = 12.37, height = 7.04, res=150,units = "in");par(mfrow = c(2,2))
-    } else {jpeg(file=paste0(deparse(substitute(x)),"_Response_VS_predicted.jpeg"),width = 12.37, height = 7.04, res=150,units = "in")}
+    if (AllInOne == T){png(file=paste0(deparse(substitute(x)),"Diagnostic.png"),width = 12.37, height = 7.04, res=600,units = "in");par(mfrow = c(2,2))
+    } else {png(file=paste0(deparse(substitute(x)),"_Response_VS_predicted.png"),width = 12.37, height = 7.04, res=600,units = "in")}
     plot(df2$sp.mort.bin, M2$V1,xlab="Fitted values", ylab="Predicted", main="Predicted vs. fitted",
          cex.main=1.5, cex.lab =1.3) # To save 
     if (AllInOne == F){dev.off()} # To save 
@@ -190,7 +193,7 @@ Diagnostic <- function(x,Yportion,AllInOne=T){
     ResM <- residuals(M1)
     FitM <- fitted(M1)
     PredM <- predict(M1)
-    if (AllInOne == F) jpeg(file=paste0(deparse(substitute(x)),"_Residuals_VS_fitted.jpeg"),width = 12.37, height = 7.04, res=150,units = "in") # Save it 
+    if (AllInOne == F) png(file=paste0(deparse(substitute(x)),"_Residuals_VS_fitted.png"),width = 12.37, height = 7.04, res=600,units = "in") # Save it 
     par(mfrow=c(1,1))
     plot(ResM ~ FitM, xlab="Fitted values", ylab="Residuals", main="Residuals vs. fitted",
          cex.main=1.5, cex.lab =1.3)
@@ -198,13 +201,13 @@ Diagnostic <- function(x,Yportion,AllInOne=T){
     if (AllInOne == F){dev.off()} # Save it 
     
     # Save this plot 
-    if (AllInOne == F){jpeg(file=paste0(deparse(substitute(x)),"_QQplot.jpeg"),width = 12.37, height = 7.04, res=150,units = "in")} # Save it 
+    if (AllInOne == F){png(file=paste0(deparse(substitute(x)),"_QQplot.png"),width = 12.37, height = 7.04, res=600,units = "in")} # Save it 
     qqnorm(ResM, cex.main=1.5, cex.lab =1.3)
     qqline(ResM)
     if (AllInOne == F){dev.off()} # Save it 
     
     # Save this one 
-    if (AllInOne == F){jpeg(file=paste0(deparse(substitute(x)),"_BinnedPlot.jpeg"),width = 12.37, height = 7.04, res=150,units = "in")} # Save it 
+    if (AllInOne == F){png(file=paste0(deparse(substitute(x)),"_BinnedPlot.png"),width = 12.37, height = 7.04, res=600,units = "in")} # Save it 
     binnedplot(PredM,ResM)
     dev.off()
   }
@@ -218,7 +221,7 @@ Diagnostic <- function(x,Yportion,AllInOne=T){
   #c2 <- c2[-c(c2$key=="Plotcat"),]
   test <- cbind(c1,c2[,c(2,1)],c3)
   
-  jpeg(file=paste0(deparse(substitute(x)),"Residuals_Scatterplots.jpeg"),width = 12.37, height = 7.04, res=150,units = "in")
+  png(file=paste0(deparse(substitute(x)),"Residuals_Scatterplots.png"),width = 12.37, height = 7.04, res=600,units = "in")
   par(mfrow=c(1,1))
   p <- xyplot(test[,1]~test[,2] | test[,3],grid = T,
               #group=test[,4],
@@ -235,7 +238,7 @@ Diagnostic <- function(x,Yportion,AllInOne=T){
               })
   print(p)
   dev.off()
-  jpeg(file=paste0(deparse(substitute(x)),"_VisualisationTEST.jpeg"),width = 12.37, height = 7.04, res=150,units = "in") # Save it 
+  png(file=paste0(deparse(substitute(x)),"_VisualisationTEST.png"),width = 12.37, height = 7.04, res=600,units = "in") # Save it 
   plot(x,ask=F)
   dev.off()
   dev.off()
@@ -245,6 +248,5 @@ Diagnostic <- function(x,Yportion,AllInOne=T){
   #dev.print(file=paste0(deparse(substitute(x)),"_Visualisation.jpeg"),device=jpeg,width=710) # Save it 
   #par(ask=F)
   #par(mfrow = c(1,1))
-  
 }
 

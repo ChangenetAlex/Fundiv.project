@@ -223,6 +223,15 @@ Marginality_Levels <- function(CODE,seuil=0.8,seuilC=0.6,save=T){
   dir.create(paste0(Dir,"species/",CODE,"/CLIMAP/"))
   save(test6,file=paste0(Dir,"species/",CODE,"/CLIMAP/Climap_",CODE,"_",seuil,"_",seuilC,".RData"))
   writeRaster(get(paste0("CLIMAP_",seuil,"_",seuilC)),filename=paste0(Dir,"species/",CODE,"/CLIMAP/Climap_",seuil,"_",seuilC,".tif"),options="INTERLEAVE=BAND",overwrite=T)
+  
+  ###################################   !!!!!!!
+  # ADDED on THE 29th OF JANUARY ####   !!!!!!!
+  ###################################   !!!!!!!
+  
+  # In order to keep the attributes table, it is necessary to save the file as a .grd with ' bandorder="bil" ' instead of options = ...
+  # This generates two different files : .grd and .gri
+
+  
   # line to remove the test 6 object
   # Ajout des points de mon espèce for a giving map for instance
   load(paste0(Dir,"species/",CODE,"/",CODE,"_summary.RData"),envir = globalenv())

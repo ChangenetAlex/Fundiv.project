@@ -1,3 +1,5 @@
+rm(list = ls())
+gc()
 getwd()
 
 tableresults <- read.csv("~/Documents/FUNDIV - NFI - Europe/our-data/species/Results.all/tableresults.csv")

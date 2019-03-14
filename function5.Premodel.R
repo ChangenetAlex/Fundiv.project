@@ -38,6 +38,7 @@ Explain = c("ppet.mean_climate_min.30",             ##
             "Plotcat")                              ##
 ######################################################
 
+
 panel.hist <- function(x, ...)
 {
   usr <- par("usr"); on.exit(par(usr))
@@ -71,7 +72,7 @@ Premodel <- function(z,Resp,Explain,size,save=F){
   
   if (length(Explain)<6){
     
-    if (save==T) jpeg(file=paste0(Dir,"/Premodel/",Resp,"_",Explain[1],"_Scatterplots.jpeg"),width=710)
+    if (save==T) png(file=paste0(Dir,"/Premodel/",Resp,"_",Explain[1],"_Scatterplots.png"),width=2400,res=2400/12)
     par(mfrow=c(1,1))
     xyplot(test[,1]~test[,2] | test[,3],col=1,
            type = c("p", "smooth"),
@@ -86,7 +87,7 @@ Premodel <- function(z,Resp,Explain,size,save=F){
              #panel.loess(x,y,lwd=2) draw the lines 
            })
     dev.off()
-    if (save==T) jpeg(file=paste0(Dir,"/Premodel/",Resp,"_",Explain[1],"_ClevelandPlot.jpeg"),width=710) # Save it 
+    if (save==T) png(file=paste0(Dir,"/Premodel/",Resp,"_",Explain[1],"_ClevelandPlot.png"),width=2400,res=2400/12) # Save it 
     par(mfrow=c(size,size))
     for (i in 1:length(A)){
       dotchart(z[,c(A[i])],
@@ -97,13 +98,13 @@ Premodel <- function(z,Resp,Explain,size,save=F){
                pch = c(1:3))
     }
     dev.off()
-    if (save==T) jpeg(file=paste0(Dir,"/Premodel/",Resp,"_",Explain[1],"_Hist.jpeg"),width=710) # Save it 
+    if (save==T) png(file=paste0(Dir,"/Premodel/",Resp,"_",Explain[1],"_Hist.png"),width=2400,res=2400/12) # Save it 
     par(mfrow=c(2,2))
     for (i in 2:length(A)){
       hist(z[,c(A[i])],breaks=40,xlab=c(paste0("Centered & normed Scale ",A[i])),ylab="Frequency",main="")
     }
     dev.off()
-    if (save==T) jpeg(file=paste0(Dir,"/Premodel/",Resp,"_",Explain[1],"_PairsPlot.jpeg"),width=710) # Save it 
+    if (save==T) png(file=paste0(Dir,"/Premodel/",Resp,"_",Explain[1],"_PairsPlot.png"),width=2400,res=2400/12) # Save it 
     par(mfrow=c(1,1))
     pairs(z[,c(A)],panel = panel.smooth,upper.panel=panel.cor,diag.panel = panel.hist)
     dev.off()

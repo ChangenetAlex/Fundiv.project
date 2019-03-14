@@ -201,10 +201,10 @@ ModelBoot <- function(x,N = N,Ncat = Ncat,LvL = LvL, CAT = CAT, nBoot = nBoot,Yp
     scale_shape_manual("", values=c(1,2,3),labels=(c("Core","Leading Edge","Rear Edge")))
   if (x$family$family=="binomial"){
     setwd(dir = paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models/binomial/",deparse(substitute(x)),"/"))
-    p1 <- p1 + labs(title=paste0(VariationCAT," : ",Variation), y=paste0(Esp,": Probability of at least one mortality event"), x=Variation, caption="Changenet et al. 2018")
+    p1 <- p1 + labs(title=paste0(VariationCAT," : ",Variation), y=paste0(Esp,": Probability of at least one mortality event"), x=Variation)
   } else {
     setwd(dir = paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",CODE,"/CLIMAP/Models/Negbin/",deparse(substitute(x)),"/"))
-    p1 <- p1 + labs(title=paste0(VariationCAT," : ",Variation), y=paste0(Esp,": Annual predicted mortality (in ‰)"), x=Variation, caption="Changenet et al. 2018")}
+    p1 <- p1 + labs(title=paste0(VariationCAT," : ",Variation), y=paste0(Esp,": Annual predicted mortality (in ‰)"), x=Variation)}
   p1 <- p1 + coord_cartesian(ylim=c(0,yMAX),expand = T)+
     #scale_y_continuous(breaks = waiver(),limits = c(0,yMAX)) + 
     theme_light(base_size = 15)+
@@ -213,10 +213,14 @@ ModelBoot <- function(x,N = N,Ncat = Ncat,LvL = LvL, CAT = CAT, nBoot = nBoot,Yp
           legend.background=element_rect(fill="white",colour="black",size=0.2),
           panel.border = element_rect(colour = "black", fill=NA, size=0.8),
           axis.line = element_line(colour="black"),
-          plot.title = element_text(size=18,hjust = 0.5),
-          plot.caption = element_text(face="bold.italic"))
+          plot.title = element_text(size=18,hjust = 0.5))
   print(p1)
-  if (saveboot==T){ggsave(filename = paste0("GG_",deparse(substitute(x)),"_",seuil,"_",Variation,"_",VariationCAT,".png"),plot = p1, width = 12.37, height = 7.04, dpi=150,units = "in")} # To modify 
+  if (saveboot==T){ggsave(filename = paste0("GG_",deparse(substitute(x)),"_",seuil,"_",Variation,"_",VariationCAT,".150.png"),plot = p1, width = 12.37, height = 7.04, dpi=150,units = "in")
+    ggsave(filename = paste0("GG_",deparse(substitute(x)),"_",seuil,"_",Variation,"_",VariationCAT,".300.png"),plot = p1, width = 12.37, height = 7.04, dpi=300,units = "in")
+    ggsave(filename = paste0("GG_",deparse(substitute(x)),"_",seuil,"_",Variation,"_",VariationCAT,".600.png"),plot = p1, width = 12.37, height = 7.04, dpi=600,units = "in")
+    ggsave(filename = paste0("GG_",deparse(substitute(x)),"_",seuil,"_",Variation,"_",VariationCAT,".1000.png"),plot = p1, width = 12.37, height = 7.04, dpi=1000,units = "in")
+    } # To modify dpi (300 ou 600 au lieu de 150)
+  
   #Here is the final plot
   dev.off()
   gc()

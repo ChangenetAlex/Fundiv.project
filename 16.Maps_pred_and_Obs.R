@@ -9,9 +9,12 @@ library(rasterVis)
 library(rgeos)
 library(ggplot2)
 
+QUANT.all <- data.frame(matrix(nrow=20,ncol=4,NA))
+colnames(QUANT.all) <- c("Q1 Occurence","Q3 Occurence","Q1 Amount","Q3 Amount")
 i = 1
 Allcode <- c("PINPINA","ABIALB","ACEPSE","ALNGLU","BETPEN","CASSAT","FAGSYL","FRAEXC","PICABI","PINHAL","PINNIG","PINPIN","PINSYL","POPNIG","POPTRE","QUEILE","QUEPET",
              "QUEPYR","QUEROB","QUESUB")
+rownames(QUANT.all) <-Allcode
 Allmod <- c("Mbin13A.18","Mbin14A.19","Mbin13B.26","Mbin13A.22","M2bin13B.22","M2bin13A21","M2bin15B23","Mbin3C.26","M2bin7B.17","Mbin11B.19","Mbin3B.20","Mbin15B.21","Mbin5B.17","Mbin3B.31","Mbin13A.27","M2bin1C.20","M2bin1B.23","Mbin13B.26","Mbin7A.26","Mbin1B.23")
 for (i in 1:length(Allcode)){
   Dir =c(paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/",Allcode[i],"/CLIMAP/Models/binomial/",Allmod[i],"/"))
@@ -19,12 +22,16 @@ for (i in 1:length(Allcode)){
   assign(sub(".rda","",list.files(pattern=".rda"), ignore.case = FALSE,fixed = T),get(load(file = list.files(pattern=".rda")))) 
   #rm("x")
   # New section 
-  r1 <- data.frame(x$data$longitude, x$data$latitude, predict(x))
+    r1 <- data.frame(x$data$longitude, x$data$latitude, predict(x))
   colnames(r1) <- c("X","Y","Z")
-  ?quantile
+  QUANT.all[which(rownames(QUANT.all)==Allcode[i]),1] <- signif(quantile(r1$Z,0.25,type=7),digits=2)
+  QUANT.all[which(rownames(QUANT.all)==Allcode[i]),2] <- signif(quantile(r1$Z,0.75,type=7),digits=2)
+  print(QUANT.all)
+  
   if (x$family$family=="binomial") {r1$bin <- ifelse(r1$Z>quantile(r1$Z,0.75,type=7),"0",ifelse(r1$Z<quantile(r1$Z,0.25,type=7),"2","1"))} ## Percentage of mortality as classes 
   #if (x$family$family=="binomial") {r1$bin <- ifelse(r1$Z>0.20,"0",ifelse(r1$Z>0.1,"1","2"))} ## Percentage of mortality as classes 
   #}else r1$bin <- ifelse(r1$Z>40,"0",ifelse(r1$Z>20,"1","2"))
+ 
   par(mfrow=c(1,1))
   worldmap <- getMap(resolution = "high")
   europe <- worldmap[which(worldmap$REGION=="Europe"),]
@@ -32,33 +39,37 @@ for (i in 1:length(Allcode)){
   europe <- worldmap[which(grepl("Europe", worldmap$GEO3)),] 
   europe <-spTransform(europe,"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0 ") # Convert to the right system
   europe = crop(europe,c(-15, 45, 35, 70))
-  p <- ggplot() + theme(panel.background = element_rect(fill="lightblue", colour="black", size=3, 
+  p <- ggplot() + theme(panel.background = element_rect(fill="white", colour="black", size=3, 
                                                         linetype=1, color="black"),legend.key.size = unit(1.5, "cm"),legend.position = c(0.15,0.8)) +
     theme(panel.grid.major = element_line(colour="blue", size=4, linetype=0,lineend="square", color="red"),
           panel.grid.minor = element_line(colour="blue", size=1, linetype=0,lineend="round", color="blue"))+
-    theme(legend.background = element_rect(fill="black",size=0.5, linetype="solid", 
+    theme(legend.background = element_rect(fill="white",size=1, linetype="solid", 
                                            colour ="black"))+
-    geom_polygon(data = europe, aes(x=long, y = lat,group=group),fill="gray20",col="gray14") + 
+    theme(legend.position = "none")+ ## Allow us to disable the full legend
+    geom_polygon(data = europe, aes(x=long, y = lat,group=group),fill="gray60",col="gray60") + 
     coord_fixed(1.3) + geom_point(data = r1, aes(x = X, y = Y, group=bin, col = bin, shape = bin, size=bin))
-  if (x$family$family=="binomial") {p <- p + scale_colour_manual(values = c("red","white","blue"),name="Probability of observing \n at least one event",labels = c(paste0("> ",signif(quantile(r1$Z,0.75,type=7),digits=2)),paste0(signif(quantile(r1$Z,0.25,type=7),digits=2),"-",signif(quantile(r1$Z,0.75,type=7),digits=2)),paste0("< ",signif(quantile(r1$Z,0.25,type=7),digits=2)))) +
-    scale_shape_manual(values = c(20,3,17),name="Probability of observing \n at least one event",labels = c(paste0("> ",signif(quantile(r1$Z,0.75,type=7),digits=2)),paste0(signif(quantile(r1$Z,0.25,type=7),digits=2),"-",signif(quantile(r1$Z,0.75,type=7),digits=2)),paste0("< ",signif(quantile(r1$Z,0.25,type=7),digits=2)))) +
-    scale_size_manual(values= c(0.7,0.5,0.7),name="Probability of observing \n at least one event",labels = c(paste0("> ",signif(quantile(r1$Z,0.75,type=7),digits=2)),paste0(signif(quantile(r1$Z,0.25,type=7),digits=2),"-",signif(quantile(r1$Z,0.75,type=7),digits=2)),paste0("< ",signif(quantile(r1$Z,0.25,type=7),digits=2))))
+  if (x$family$family=="binomial") {p <- p + scale_colour_manual(values = c("red","white","blue"),name="Mortality occurence \n probability",labels = c(paste0("> Q1"),paste0("Q1 - Q3"),paste0("< Q3"))) +
+    scale_shape_manual(values = c(20,3,17),name="Mortality occurence \n probability",labels = c(paste0("> Q1"),paste0("Q1 - Q3"),paste0("< Q3"))) +
+    scale_size_manual(values= c(0.7,0.5,0.7),name="Mortality occurence \n probability",labels = c(paste0("> Q1"),paste0("Q1 - Q3"),paste0("< Q3")))
   }else {p <- p + scale_colour_manual(values = c("red","white","blue"),name="Number of events by plot",labels = c(">40", "20-40","0-20")) +
     scale_shape_manual(values = c(20,3,17),name="Number of events by plot",labels = c(">40", "20-40","0-20")) +
     scale_size_manual(values= c(1,1,1),name="Number of events by plot",labels = c(">40", "20-40","0-20"))}
   p <- p + guides(shape = guide_legend(override.aes = list(size = 5)))+
-    labs(title=paste0('Mortality occurence predicted probability of ',Allcode[i]), y=paste0("Latitude"), x="Longitude", caption="Changenet et al. 2018")+
+    labs(title=paste0(Allcode[i]), y=paste0("Latitude"), x="Longitude")+
     theme(text = element_text(face="bold"),legend.direction ="vertical",
-          axis.text.x = element_text(size=13,color="black"),axis.text.y = element_text(size=13,color="black"),
-          legend.key = element_rect(fill = "gray20", colour = "white"),
-          legend.background=element_rect(fill="white",colour="black",size=0.2),
-          panel.border = element_rect(colour = "black", fill=NA, size=0.8),
+          axis.text.x = element_text(size=18,color="black"),axis.text.y = element_text(size=18,color="black"),
+          axis.title.x = element_text(size=18),axis.title.y = element_text(size=18),
+          legend.key = element_rect(fill = "gray60", colour = "black",size = 0.2),
+          legend.background=element_rect(fill="white",colour="black",size=.2),
+          panel.border = element_rect(colour = "black", fill=NA, size=0.5),
           axis.line = element_line(colour="black"),
-          plot.title = element_text(size=18,hjust = 0.5),
+          plot.title = element_text(size=22,hjust = 0.5),
           plot.caption = element_text(face="bold.italic"))
-  ggsave(filename = paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/Results.all/Figures.all/Synthesis/",Allcode[i],"_",Allmod[i],"_","Pred.Mort.png"),plot = p, width = 12.37, height = 7.04, dpi=150,units = "in")
-}
-  
+  ggsave(filename = paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/Redaction/Paper1/300_Small_",Allcode[i],"_",Allmod[i],"_","Pred.Mort.png"),plot = p, width = 12.37, height = 7.04, dpi=300,units = "in")
+  ggsave(filename = paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/Redaction/Paper1/300_Big_",Allcode[i],"_",Allmod[i],"_","Pred.Mort.png"),plot = p, width = 20, height = 11.05, dpi=300,units = "in")
+  }
+
+
 
 
 i = 1
@@ -72,9 +83,15 @@ for (i in 1:length(Allcode)){
   assign(sub(".rda","",list.files(pattern=".rda"), ignore.case = FALSE,fixed = T),get(load(file = list.files(pattern=".rda")))) 
   #rm("x")
   # New section 
+
   r1 <- data.frame(x$data$longitude, x$data$latitude, predict(x))
   colnames(r1) <- c("X","Y","Z")
   r1$bin <- ifelse(r1$Z>quantile(r1$Z,0.75,type=7),"0",ifelse(r1$Z<quantile(r1$Z,0.25,type=7),"2","1")) ## Percentage of mortality as classes 
+  
+  QUANT.all[which(rownames(QUANT.all)==Allcode[i]),3] <- signif(quantile(r1$Z,0.25,type=7),digits=2)
+  QUANT.all[which(rownames(QUANT.all)==Allcode[i]),4] <- signif(quantile(r1$Z,0.75,type=7),digits=2)
+  print(QUANT.all)
+  
   par(mfrow=c(1,1))
   worldmap <- getMap(resolution = "high")
   europe <- worldmap[which(worldmap$REGION=="Europe"),]
@@ -82,29 +99,37 @@ for (i in 1:length(Allcode)){
   europe <- worldmap[which(grepl("Europe", worldmap$GEO3)),] 
   europe <-spTransform(europe,"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0 ") # Convert to the right system
   europe = crop(europe,c(-15, 45, 35, 70))
-  p <- ggplot() + theme(panel.background = element_rect(fill="lightblue", colour="black", size=3, 
+  p <- ggplot() + theme(panel.background = element_rect(fill="white", colour="black", size=3, 
                                                         linetype=1, color="black"),legend.key.size = unit(1.5, "cm"),legend.position = c(0.15,0.8)) +
     theme(panel.grid.major = element_line(colour="blue", size=4, linetype=0,lineend="square", color="red"),
           panel.grid.minor = element_line(colour="blue", size=1, linetype=0,lineend="round", color="blue"))+
-    theme(legend.background = element_rect(fill="black",size=0.5, linetype="solid", 
+    theme(legend.background = element_rect(fill="white",size=0.5, linetype="solid", 
                                            colour ="black"))+
-    geom_polygon(data = europe, aes(x=long, y = lat,group=group),fill="gray20",col="gray14") + 
+    theme(legend.position = "none")+ ## Allow us to disable the full legend
+    geom_polygon(data = europe, aes(x=long, y = lat,group=group),fill="gray75",col="gray75") + 
     coord_fixed(1.3) + geom_point(data = r1, aes(x = X, y = Y, group=bin, col = bin, shape = bin, size=bin))
-  p <- p + scale_colour_manual(values = c("red","white","blue"),name="Rate of mortality events \n (proportion/plot/year)",labels = c(paste0("> ",signif(quantile(r1$Z,0.75,type=7),digits=2)),paste0(signif(quantile(r1$Z,0.25,type=7),digits=2),"-",signif(quantile(r1$Z,0.75,type=7),digits=2)),paste0("< ",signif(quantile(r1$Z,0.25,type=7),digits=2)))) +
-    scale_shape_manual(values = c(20,3,17),name="Rate of mortality events \n (proportion/plot/year)",labels = c(paste0("> ",signif(quantile(r1$Z,0.75,type=7),digits=2)),paste0(signif(quantile(r1$Z,0.25,type=7),digits=2),"-",signif(quantile(r1$Z,0.75,type=7),digits=2)),paste0("< ",signif(quantile(r1$Z,0.25,type=7),digits=2)))) +
-    scale_size_manual(values= c(0.9,0.5,0.9),name="Rate of mortality events \n (proportion/plot/year)",labels = c(paste0("> ",signif(quantile(r1$Z,0.75,type=7),digits=2)),paste0(signif(quantile(r1$Z,0.25,type=7),digits=2),"-",signif(quantile(r1$Z,0.75,type=7),digits=2)),paste0("< ",signif(quantile(r1$Z,0.25,type=7),digits=2))))
+  p <- p + scale_colour_manual(values = c("red","white","blue"),name="Mortality amount \n (proportion/plot/year)",labels = c(paste0("> Q1"),paste0("Q1 - Q3"),paste0("< Q3"))) +
+    scale_shape_manual(values = c(20,3,17),name="Mortality amount \n (proportion/plot/year)",labels = c(paste0("> Q1"),paste0("Q1 - Q3"),paste0("< Q3"))) +
+    scale_size_manual(values= c(0.9,0.5,0.9),name="Mortality amount \n (proportion/plot/year)",labels = c(paste0("> Q1"),paste0("Q1 - Q3"),paste0("< Q3")))
   p <- p + guides(shape = guide_legend(override.aes = list(size = 5)))+
-    labs(title=paste0('Mortality abundance predicted probability of ',Allcode[i]), y=paste0("Latitude"), x="Longitude", caption="Changenet et al. 2018")+
+    labs(title=paste0(Allcode[i]), y=paste0("Latitude"), x="Longitude")+
     theme(text = element_text(face="bold"),legend.direction ="vertical",
-          axis.text.x = element_text(size=13,color="black"),axis.text.y = element_text(size=13,color="black"),
-          legend.key = element_rect(fill = "gray20", colour = "white"),
+          axis.text.x = element_text(size=18,color="black"),axis.text.y = element_text(size=18,color="black"),
+          axis.title.x = element_text(size=18),axis.title.y = element_text(size=18),
+          legend.key = element_rect(fill = "gray75", colour = "black",size = 0.2),
           legend.background=element_rect(fill="white",colour="black",size=0.2),
-          panel.border = element_rect(colour = "black", fill=NA, size=0.8),
+          panel.border = element_rect(colour = "black", fill=NA, size=0.5),
           axis.line = element_line(colour="black"),
-          plot.title = element_text(size=18,hjust = 0.5),
+          plot.title = element_text(size=22,hjust = 0.5),
           plot.caption = element_text(face="bold.italic"))
-  ggsave(filename = paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/our-data/species/Results.all/Figures.all/Synthesis/",Allcode[i],"_",Allmod[i],"_","Pred.Mort.Abun.png"),plot = p, width = 12.37, height = 7.04, dpi=150,units = "in")
-}
+  ggsave(filename = paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/Redaction/Paper1/300_Small_",Allcode[i],"_",Allmod[i],"_","Pred.Mort.Abun.png"),plot = p, width = 12.37, height = 7.04, dpi=300,units = "in")
+  ggsave(filename = paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/Redaction/Paper1/300_Big_",Allcode[i],"_",Allmod[i],"_","Pred.Mort.Abun.png"),plot = p, width = 20, height = 11.05, dpi=300,units = "in")
+  }
+
+
+write.table(QUANT.all, sep=",", file="/home/achangenet/Documents/FUNDIV - NFI - Europe/Redaction/Paper1/QUANTILE.ALL.csv",row.names = T)
+
+
 
 
 

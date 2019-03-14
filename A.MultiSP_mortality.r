@@ -81,6 +81,7 @@ summary(as.factor(dfplot3QUEILE$cut.latitude))
 ## For each species, sample randomly three plots for each combination of modality. 
 # (3 levels for latitude, 3 levels for mortality => 9 modality * 3 plots = 27 rows.)
 
+
 table(dfplot3ABIALB$cut.latitude,dfplot3ABIALB$cut.sp.mortality.plot.rate.yr)
 k=1
 for (i in 1:3){
@@ -239,6 +240,35 @@ df2sp11$dif.mort <- abs(df2sp11[,c(9)]-df2sp11[,c(21)])
 
 df2sp <- rbind(df2sp1,df2sp2,df2sp3,df2sp4,df2sp5,df2sp6,df2sp7,df2sp8,df2sp9,df2sp10,df2sp11)
 saveRDS(df2sp, paste0("/home/achangenet/Documents/FUNDIV - NFI - Europe/Fundiv.Drive/Species/Syl/df2sp.rds"))
+
+
+
+aa=readRDS("df2sp.rds")
+
+tail(aa)
+aa[79:89,]
+
+aa=readRDS("dfplot4PINSYL.rds")
+aa=readRDS("dfplot4QUEILE.rds")
+test1<-aa[aa$cut.sp.mortality.plot.rate.yr==1,]
+test2<-aa[aa$cut.sp.mortality.plot.rate.yr==2,]
+test3<-aa[aa$cut.sp.mortality.plot.rate.yr==3,]
+quartz()
+par(mfrow=c(2,3), pty='s')
+plot(test1$sp.mortality.plot.rate.yr~test1$latitude)
+plot(test2$sp.mortality.plot.rate.yr~test2$latitude)
+plot(test3$sp.mortality.plot.rate.yr~test3$latitude)
+aa=readRDS("dfplot4FAGSYL.rds")
+test1<-aa[aa$cut.sp.mortality.plot.rate.yr==1,]
+test2<-aa[aa$cut.sp.mortality.plot.rate.yr==2,]
+test3<-aa[aa$cut.sp.mortality.plot.rate.yr==3,]
+plot(test1$sp.mortality.plot.rate.yr~test1$latitude)
+plot(test2$sp.mortality.plot.rate.yr~test2$latitude)
+plot(test3$sp.mortality.plot.rate.yr~test3$latitude)
+
+
+
+
 
 
     

@@ -387,10 +387,12 @@ ggEffect <- function(x,y="REL",effect="sum",band=T){
     geom_segment(x=min(clim.bio$latitude), y=-0.1, xend=min(clim.bio$latitude), yend=Inf, colour="black", size=0.1,linetype=11) +
     geom_segment(x=max(clim.bio$latitude), y=-0.1, xend=max(clim.bio$latitude), yend=Inf, colour="black", size=0.1,linetype=11) +
     geom_segment(x=58, y=-0.1, xend=58, yend=Inf, colour="light grey", size=0.1,linetype=2) +
-    geom_segment(x=42.5, y=-0.1, xend=42.5,yend=Inf, colour="light grey", size=0.1,linetype=2) +
-    labs(caption="Changenet et al. 2018")
+    geom_segment(x=42.5, y=-0.1, xend=42.5,yend=Inf, colour="light grey", size=0.1,linetype=2)
   print(p)
-  if (band==T){ggsave(filename = paste0(y,"_",effect,"_",CODE,"_",deparse(substitute(x)),"_band.png"),plot = p, width = 12.37, height = 7.04, dpi=150,units = "in") # Save 
+  if (band==T){ggsave(filename = paste0(y,"_",effect,"_",CODE,"_",deparse(substitute(x)),"_150band.png"),plot = p, width = 12.37, height = 7.04, dpi=150,units = "in") # Save
+    ggsave(filename = paste0(y,"_",effect,"_",CODE,"_",deparse(substitute(x)),"_300band.png"),plot = p, width = 12.37, height = 7.04, dpi=300,units = "in")
+    ggsave(filename = paste0(y,"_",effect,"_",CODE,"_",deparse(substitute(x)),"_600band.png"),plot = p, width = 12.37, height = 7.04, dpi=600,units = "in")
+    ggsave(filename = paste0(y,"_",effect,"_",CODE,"_",deparse(substitute(x)),"_1000band.png"),plot = p, width = 12.37, height = 7.04, dpi=1000,units = "in")
   }else ggsave(filename = paste0(y,"_",effect,"_",CODE,"_",deparse(substitute(x)),"_NO.band.png"),plot = p, width = 12.37, height = 7.04, dpi=150,units = "in")
 }
 
